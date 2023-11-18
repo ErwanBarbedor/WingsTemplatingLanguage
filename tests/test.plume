@@ -1,0 +1,92 @@
+#-- TEST : basic text
+foo
+#-- RESULT
+foo
+#-- END
+
+#---------------------------------
+
+#-- TEST : lua
+#(a=5)
+#a
+#-- RESULT
+5
+#-- END
+
+#-- TEST : lua-inline eval
+#(1+1)
+#-- RESULT
+2
+#-- END
+
+#---------------------------------
+
+#-- TEST : for 1
+#for i=1, 2 #do
+	foo
+#end
+#-- RESULT
+foo
+foo
+#-- END
+
+#-- TEST : for 2
+#for i=1, 10 #do #i #end
+#-- RESULT
+ 1  2  3  4  5  6  7  8  9  10 
+#-- END
+
+#-- TEST : while
+#lua i=5 #end
+#while i>2 #do
+	#i
+	#lua i=i-1 #end
+#end
+#-- RESULT
+5
+4
+3
+#-- END
+
+#-- TEST : if
+#if 1+1==2 #then
+	foo
+#else
+	bar
+#end
+#-- RESULT
+foo
+#-- END
+
+#---------------------------------
+
+#-- TEST : simple macro
+#macro foo bar #end #foo
+#-- RESULT
+  bar 
+#-- END
+
+#-- TEST : macro with args
+#macro double(x)
+	#x #x
+#end
+#double(foo)
+#-- RESULT
+foo foo
+
+#-- END
+
+#-- TEST : simple function
+#function foo return "bar" #end #foo
+#-- RESULT
+ bar
+#-- END
+
+#-- TEST : function with args
+#function double(x)
+	return x .. x
+#end
+#double(foo)
+#-- RESULT
+foofoo
+#-- END
