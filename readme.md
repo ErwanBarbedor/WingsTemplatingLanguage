@@ -110,11 +110,6 @@ Guidelines for how others can contribute to the Plume project.
 ## License
 Detail the license under which Plume is released.
 
-## Credits
-Acknowledge contributors and any inspirations or third-party resources used.
-
-## Contact
-How to reach you for support, questions, or collaborations.
 ## Français
 ## Table des matières
 - [Introduction](#introduction)
@@ -135,10 +130,9 @@ Ainsi, Plume permet d'utiliser durant l'écriture de vos documents l'ensemble de
   - Possibilité d'étendre Plume avec des librairies lua
 
 ## Installation
-### Fichier Lua
 Plume est écrit en Lua et compatible avec les versions 5.1 à 5.4, ainsi que luajit.
-Si vous avez Lua d'installé sur votre système, il suffit de télécharger les fichiers plume.lua et plume.sh (ou plume.bat pour windows).
-Dans le cas contraire, vous pouvez vous référer à la section suivante.
+Si lua n'est pas installé sur votre système, téléchargez le ici.
+Maintenant, il suffit de télécharger les fichiers plume.lua et plume.sh (ou plume.bat pour windows).
 
 Ensuite,
 ``` lua
@@ -162,9 +156,6 @@ Et pour ceux de windows:
 set LUA_INTERPRETER= #path to your LUA_INTERPRETER, defaut "luajit"
 plume.bat monfichier.plume
 ```
-
-### Standalone
-Si vous n'avez pas Lua installé sur votre système ou si vous préférez simplement un standalone, 
 
 ## Usage (if you don't know lua)
 Si vous maîtrisez Lua, je vous conseille de directement sauter à la section suivante.
@@ -224,9 +215,3 @@ Guidelines for how others can contribute to the Plume project.
 
 ## License
 Detail the license under which Plume is released.
-
-## Credits
-Acknowledge contributors and any inspirations or third-party resources used.
-
-## Contact
-How to reach you for support, questions, or collaborations.

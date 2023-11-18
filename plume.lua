@@ -2,12 +2,32 @@ local plume = {}
 
 local function dummy () end
 
+-- Standard function to provide to the sandbox environnement.
+local LUA_STD = {
+	["5.1"]="_VERSION arg assert collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall",
+
+	["5.2"]="_VERSION arg assert bit32 collectgarbage coroutine debug error getmetatable io ipairs load loadfile loadstring math module next os package pairs pcall print rawequal rawget rawlen rawset select setmetatable string table tonumber tostring type unpack xpcall xpcall",
+
+	["5.3"]="_VERSION arg assert bit32 collectgarbage coroutine debug error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 xpcall",
+
+	["5.4"]="_VERSION arg assert collectgarbage coroutine debug error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset select setmetatable string table tonumber tostring type utf8 warn xpcall",
+
+	jit="_VERSION arg assert bit collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall"
+}
+
 function plume:init ()
 	plume.env = {}
 	plume.env.plume = plume
 	plume.stack = {}
 
-	for name in ("string xpcall package tostring print os unpack require getfenv setmetatable next assert tonumber io rawequal collectgarbage arg getmetatable module rawset math debug pcall table newproxy type coroutine select gcinfo pairs rawget loadstring ipairs _VERSION dofile setfenv load error loadfile"):gmatch('%S+') do
+	local version
+	if jit then
+		version = "jit"
+	else
+		version = _VERSION:match('[0-9]%.[0-9]$')
+	end
+
+	for name in LUA_STD[version]:gmatch('%S+') do
 		plume.env[name] = _G[name]
 	end
 end
@@ -404,11 +424,13 @@ function plume:render(code, optns)
 		f:close()
 	end
 
+	-- Compatibily for lua 5.1
 	local f, err = (loadstring or load) (luacode, (optns.saveluacode or "plumecode"), 't', plume.env)
 	if not f then
 		error(err)
 	end
 
+	-- Compatibily for lua 5.1
 	(setfenv or dummy) (f, plume.env)
 
 	local sucess, result = pcall(f)
