@@ -15,7 +15,7 @@ local LUA_STD = {
 	jit="_VERSION arg assert bit collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall"
 }
 
-function plume:init ()
+function plume:reset ()
 	plume.env = {}
 	plume.env.plume = plume
 	plume.stack = {}
@@ -415,6 +415,10 @@ function plume:pop ()
 end
 
 function plume:render(code, optns)
+	if not plume.env then
+		plume:reset ()
+	end
+
 	optns = optns or {}
 	local luacode = plume:transpile (code, optns.keepspace)
 

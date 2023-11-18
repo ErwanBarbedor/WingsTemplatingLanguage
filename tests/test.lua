@@ -130,7 +130,7 @@ for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
 	plumecode = table.concat(plumecode, "")
 	result    = table.concat(result, "")
 
-	plume:init ()
+	plume:reset ()
 	local output  = plume:render(plumecode)
 	local soutput = output:tostring()
 
