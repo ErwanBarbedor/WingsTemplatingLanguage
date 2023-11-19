@@ -208,7 +208,29 @@ Pour utiliser la macro, il suffit de faire :
 ### Structures de controles
 Demonstrate how to use control structures like loops and conditionals within templates.
 
-## Usage (if you don't know lua)
+### Importer un fichier
+
+### Utiliser lua
+#lua et #function
+
+## Usage (if you know lua)
+
+### Philosophie de Plume
+### Structures de controle
+### function
+### Fonctionnement technique de plume
+
+require et dofile
+
+plume:transpile (code, optns)
+plume:render (code, optns)
+
+plume:pop ()
+plume:push ()
+plume:write ()
+
+plume:TokenList ()
+plume:Token ()
 
 ## Contributing
 Guidelines for how others can contribute to the Plume project.
