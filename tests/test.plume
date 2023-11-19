@@ -6,11 +6,20 @@ foo
 
 #---------------------------------
 
-#-- TEST : lua
+#-- TEST : lua 1
 #(a=5)
 #a
 #-- RESULT
 5
+#-- END
+
+#-- TEST : lua 2
+#(a=5)
+#macro foo #(local a = 2) #a #end
+#foo #a
+#-- RESULT
+
+  2  5
 #-- END
 
 #-- TEST : lua-inline eval
@@ -34,6 +43,21 @@ foo
 #for i=1, 10 #do #i #end
 #-- RESULT
  1  2  3  4  5  6  7  8  9  10 
+#-- END
+
+#-- TEST : for 3
+#for i=1, 2 #do
+	#for j=1, 2 #do
+		#i*#j=#(i*j)
+	#end
+#end
+#-- RESULT
+1*1=1
+	1*2=2
+	
+2*1=2
+	2*2=4
+	
 #-- END
 
 #-- TEST : while
