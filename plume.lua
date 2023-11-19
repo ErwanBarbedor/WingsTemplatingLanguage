@@ -1,8 +1,11 @@
 local plume = {}
 
+-- Empty function used as a placeholder for compatibility
 local function dummy () end
 
--- Standard function to provide to the sandbox environnement.
+-- Predefined list of standard Lua variables/functions for various versions
+-- These are intended to be provided as a part of sandbox environments to execute user code safely
+-- Note that dofile and require arn't included
 local LUA_STD = {
 	["5.1"]="_VERSION arg assert collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall",
 
@@ -20,10 +23,14 @@ plume.patterns = {
 }
 
 function plume:reset ()
-	plume.env = {}
-	plume.env.plume = plume
+	-- Create a new empty environment
+	plume.env = {plume=plume}
+
+	-- Stack used for managing nested constructs in the templating language
 	plume.stack = {}
-	plume.function_args = setmetatable({}, {__mode="k"}) -- information for function args
+
+	-- Weak table holding function argument information
+	plume.function_args = setmetatable({}, {__mode="k"})
 
 	local version
 	if jit then
@@ -32,26 +39,25 @@ function plume:reset ()
 		version = _VERSION:match('[0-9]%.[0-9]$')
 	end
 
+	-- Populate plume.env with lua defaut functions
 	for name in LUA_STD[version]:gmatch('%S+') do
 		plume.env[name] = _G[name]
 	end
 end
 
+function plume:transpile (code)
+	-- Define a method to transpile Plume code into Lua
 
-
-function plume:transpile (code, keepspace)
+	-- Table to hold code chuncks, one chunck by Plume line.
 	local chuncks = {}
+	-- Current chunck being processed
 	local chunck  = {}
+	-- Stack to manage code blocks and control structures
 	local stack   = {{}}
-	local acc     = {}
+	-- Track output indentation, for lisibility
 	local indent  = ""
-
-	local function incindent ()
-		indent = indent .. "\t"
-	end
-	local function decindent ()
-		indent = indent:sub(2, -1)
-	end
+	local function incindent () indent = indent .. "\t" end
+	local function decindent () indent = indent:sub(2, -1) end
 
 	local function writetext(s)
 		if #s > 0 then
@@ -100,6 +106,7 @@ function plume:transpile (code, keepspace)
 	end
 
 	local function extract_args(args)
+		-- when declaring a function or a macro, extract postional and named arguments informations.
 		args = args:sub(2, -2)
 		
 		local names = {}
@@ -132,7 +139,8 @@ function plume:transpile (code, keepspace)
 
 		local is_last_line = not line:match('\n$')
 
-		if not keepspace and not (stack[#stack] or {}).lua then
+		-- Remove indent if not inside lua code
+		if not (stack[#stack] or {}).lua then
 			line = line:gsub('^' .. indent, '')
 		end
 
@@ -145,6 +153,9 @@ function plume:transpile (code, keepspace)
 			local top = stack[#stack]
 			local before, capture
 
+			-- Detect the next signifiant token.
+			-- In most of case it will be the escape token,
+			-- but can be '(', ')' or ',' if we are inside a function call
 			if top.lua then
 				if top.name == "lua-inline" then
 					before, capture, after = line:match('(.-)([#%(%)])(.*)')
@@ -154,10 +165,11 @@ function plume:transpile (code, keepspace)
 			elseif top.name == "call" then
 				before, capture, after = line:match('(.-)([#,%(%)])(.*)')
 			else
-				-- before, capture, after = line:match('(.-)%s?\t*(#)(.*)')
 				before, capture, after = line:match('(.-)(#)(.*)')
 			end
 
+			-- Add texte before the signifiant token to the output
+			-- If no token, add whole line
 			if top.lua then
 				writelua((before or line))
 			elseif #(before or line)>0 then
@@ -165,9 +177,11 @@ function plume:transpile (code, keepspace)
 				writetext(before or line)
 			end
 
+			-- Manage signifiants tokens
 			if capture then
 				line = after
 
+				-- The command could be keyword, a commentary or '('.
 				local command
 				if capture == '#' then
 					command = line:match '^%w+' or line:match '^%-%-' or line:match '^%('
@@ -176,6 +190,7 @@ function plume:transpile (code, keepspace)
 					command = capture
 				end
 
+				-- Manage call first
 				if (command == "(" or command == ')') and (top.name == 'call' or top.name == "lua-inline") then
 					if command == '(' then
 						top.deep = top.deep+1
@@ -184,12 +199,15 @@ function plume:transpile (code, keepspace)
 					end
 
 					if top.deep > 0 then
+						-- This brace isn't closing the call
 						if top.lua then
 							writelua(command)
 						else
 							writetext(command)
 						end
 					elseif top.name == 'call' then
+						-- This is the end of call
+						-- In case of struct, we'll now capture next code.
 						if top.is_struct then
 							writeendarg ()
 							decindent ()
@@ -203,7 +221,8 @@ function plume:transpile (code, keepspace)
 							decindent ()
 							writeendfcall ()
 						end
-					else-- lua-inline
+					else
+						-- This is the end of a lua-inline chunck
 						table.remove(stack)
 						decindent ()
 
@@ -212,15 +231,18 @@ function plume:transpile (code, keepspace)
 						end
 					end
 				elseif command == ',' and top.name == 'call' then
+					-- Inside a call, push a new argument
 					writeendarg ()
 					decindent ()
 					writelua(',')
 					line = writenamedarg (line)
 					incindent()
 				elseif top.lua then
+					-- We are inside lua code. The only keyword allowed are "do, then, end" and
+					-- are closing.
 					if command == "end" and top.name == "lua" then
 						table.remove(stack)
-
+						writelua('\n' .. indent .. '-- End raw lua code\n', true)
 
 					elseif command == "end" and top.name == "function" then
 						table.remove(stack)
@@ -246,12 +268,15 @@ function plume:transpile (code, keepspace)
 						writelua(command)
 					end
 				else
-					-- line = line:gsub('^%s', '')
+					-- We are inside Plume code and no call to manage.
+					-- Manage each of allowed keyword and macro/function call
 					if command == "lua" then
+						-- Open raw lua code chunck
 						table.insert(stack, {lua=true, name="lua"})
 						writelua('\n' .. indent .. '-- Begin raw lua code\n', true)
 
 					elseif command == "function" then
+						-- Declare a new function and open a lua code chunck
 						local space, name = line:match('^(%s*)(%w+)')
 						line = line:sub((#space+#name)+1, -1)
 						local args = line:match('%b()')
@@ -269,6 +294,7 @@ function plume:transpile (code, keepspace)
 						table.insert(stack, {name="function", lua=true, args=args_info, fname=name})
 
 					elseif command == "macro" then
+						-- Declare a new function
 						local space, name = line:match('^(%s*)(%w+)')
 						line = line:sub((#space+#name)+1, -1)
 						local args = line:match('^%b()')
@@ -286,6 +312,7 @@ function plume:transpile (code, keepspace)
 						table.insert(stack, {name="macro", args=args_info, fname=name})
 						
 					elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
+						-- Open a lua chunck for iterator / condition
 						table.insert(stack, {lua=true, name=command})
 						writelua('\n'..indent..command)
 
@@ -316,6 +343,7 @@ function plume:transpile (code, keepspace)
 						end
 
 					elseif command == "(" then
+						-- Enter lua-inline
 						local declaration = line:match('^%s*local%s+%w+%s*=%s*') or line:match('^%s*%w+%s*=%s*')
 						
 						if declaration then
@@ -325,7 +353,6 @@ function plume:transpile (code, keepspace)
 							writelua('\n' .. indent .. 'plume:write (')
 							pure_lua_line = false
 						end
-
 						
 						table.insert(stack, {name="lua-inline", lua=true, deep=1, declaration=declaration})
 						
