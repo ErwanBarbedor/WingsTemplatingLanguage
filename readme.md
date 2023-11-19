@@ -219,6 +219,11 @@ Demonstrate how to use control structures like loops and conditionals within tem
 ### Structures de controle
 ### function
 ### Fonctionnement technique de plume
+#### Gestion des espaces
+La plupart des langages sont assez indiférents aux espaces, mais pour information voici comment Plume les traite:
+  - Les espaces au début et à la fin des lignes sont supprimés
+  - Un saut de ligne est effectué une fois par ligne contenant du texte 
+
 
 require et dofile
 

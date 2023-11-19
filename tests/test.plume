@@ -32,7 +32,7 @@ foo
 
 #-- TEST : for 1
 #for i=1, 2 #do
-	foo
+    foo
 #end
 #-- RESULT
 foo
@@ -47,24 +47,22 @@ foo
 
 #-- TEST : for 3
 #for i=1, 2 #do
-	#for j=1, 2 #do
-		#i*#j=#(i*j)
-	#end
+    #for j=1, 2 #do
+        #i*#j=#(i*j)
+    #end
 #end
 #-- RESULT
 1*1=1
-	1*2=2
-	
+1*2=2
 2*1=2
-	2*2=4
-	
+2*2=4
 #-- END
 
 #-- TEST : while
 #lua i=5 #end
 #while i>2 #do
-	#i
-	#lua i=i-1 #end
+    #i
+    #lua i=i-1 #end
 #end
 #-- RESULT
 5
@@ -74,9 +72,9 @@ foo
 
 #-- TEST : if
 #if 1+1==2 #then
-	foo
+    foo
 #else
-	bar
+    bar
 #end
 #-- RESULT
 foo
@@ -92,7 +90,7 @@ foo
 
 #-- TEST : macro with args
 #macro double(x)
-	#x #x
+    #x #x
 #end
 #double(foo)
 #-- RESULT
@@ -102,7 +100,7 @@ foo foo
 
 #-- TEST : macro with named args 1
 #macro double(x=bar)
-	#x #x
+    #x #x
 #end
 #double(foo)
 #-- RESULT
@@ -112,7 +110,7 @@ bar bar
 
 #-- TEST : macro with named args 2
 #macro double(x=bar)
-	#x #x
+    #x #x
 #end
 #double(x=foo)
 #-- RESULT
@@ -122,7 +120,7 @@ foo foo
 
 #-- TEST : macro with named args 3
 #macro cat(x, y=bar)
-	#x#y
+    #x#y
 #end
 #cat(foo)
 #-- RESULT
@@ -132,7 +130,7 @@ foobar
 
 #-- TEST : macro with named args 4
 #macro cat(x, y=bar)
-	#x#y
+    #x#y
 #end
 #cat(foo, y=foo)
 #-- RESULT
@@ -142,7 +140,7 @@ foofoo
 
 #-- TEST : macro with named args 5
 #macro cat(x=bar space bar)
-	#x
+    #x
 #end
 #cat
 #-- RESULT
@@ -153,7 +151,7 @@ bar space bar
 #-- TEST : macro with named args 6
 #macro foo bar #end
 #macro cat(x=#foo)
-	#x
+    #x
 #end
 #cat
 #-- RESULT
@@ -170,11 +168,67 @@ bar space bar
 
 #-- TEST : function with args
 #function double(x)
-	return x .. x
+    return x .. x
 #end
 #double(foo)
 #-- RESULT
 foofoo
+#-- END
+
+#-- TEST : macro with named args 1
+#function double(x=bar)
+    return x .. " " .. x
+#end
+#double(foo)
+#-- RESULT
+bar bar
+#-- END
+
+#-- TEST : macro with named args 2
+#function double(x=bar)
+    return x .. " " .. x
+#end
+#double(x=foo)
+#-- RESULT
+foo foo
+#-- END
+
+#-- TEST : macro with named args 3
+#function cat(x, y=bar)
+    return x..y
+#end
+#cat(foo)
+#-- RESULT
+foobar
+#-- END
+
+#-- TEST : macro with named args 4
+#function cat(x, y=bar)
+    return x..y
+#end
+#cat(foo, y=foo)
+#-- RESULT
+foofoo
+#-- END
+
+#-- TEST : macro with named args 5
+#function cat(x=bar space bar)
+    return x
+#end
+#cat
+#-- RESULT
+bar space bar
+#-- END
+
+#-- TEST : macro with named args 6
+#macro foo bar #end
+#function cat(x=#foo)
+    return x
+#end
+#cat
+#-- RESULT
+
+ bar 
 #-- END
 
 #---------------------------------
@@ -182,10 +236,9 @@ foofoo
 #-- TEST : struct 1
 #macro foo(x) #x #end
 #begin foo
-	foo
+    foo
 #end
 #-- RESULT
 
- 
-	foo
+ foo
  #-- END
