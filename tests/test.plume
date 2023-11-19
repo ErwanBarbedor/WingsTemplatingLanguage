@@ -90,3 +90,16 @@ foo foo
 #-- RESULT
 foofoo
 #-- END
+
+#---------------------------------
+
+#-- TEST : struct 1
+#macro foo(x) #x #end
+#begin foo
+	foo
+#end
+#-- RESULT
+
+ 
+	foo
+ #-- END

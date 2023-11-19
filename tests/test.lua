@@ -139,9 +139,8 @@ for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
 		if show_error then
 			print('Test ' .. name .. ' failed :')
 			print_diff (result, soutput)
+			print('[[' .. soutput .. ']]')
 		end
-		-- print('---')
-		-- print(output.luacode)
 	else
 		n_sucess = n_sucess + 1
 	end

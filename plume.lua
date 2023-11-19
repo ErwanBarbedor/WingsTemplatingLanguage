@@ -15,10 +15,15 @@ local LUA_STD = {
 	jit="_VERSION arg assert bit collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall"
 }
 
+plume.patterns = {
+	escape="#"
+}
+
 function plume:reset ()
 	plume.env = {}
 	plume.env.plume = plume
 	plume.stack = {}
+	plume.finfo = {} -- information for function args
 
 	local version
 	if jit then
@@ -145,10 +150,19 @@ function plume:transpile (code, keepspace)
 							writetext(command)
 						end
 					elseif top.name == 'call' then
-						writeendarg ()
-						decindent ()
-						decindent ()
-						writeendfcall ()
+						if top.is_struct then
+							writeendarg ()
+							decindent ()
+							writelua(',')
+							writebeginarg ()
+							incindent()
+							table.insert(stack, {name="struct"})
+						else
+							writeendarg ()
+							decindent ()
+							decindent ()
+							writeendfcall ()
+						end
 					else-- lua-inline
 						table.remove(stack)
 						decindent ()
@@ -237,8 +251,16 @@ function plume:transpile (code, keepspace)
 						if top.name == 'macro' then
 							writelua('\n' .. indent .. 'return plume:pop ()')
 						end
-						decindent ()
-						writelua('\n' .. indent .. 'end')
+
+						if top.name == "struct" then
+							writeendarg ()
+							decindent ()
+							decindent ()
+							writeendfcall ()
+						else
+							decindent ()
+							writelua('\n' .. indent .. 'end')
+						end
 
 					elseif command == "(" then
 						local declaration = line:match('^%s*local%s+%w+%s*=%s*') or line:match('^%s*%w+%s*=%s*')
@@ -261,9 +283,18 @@ function plume:transpile (code, keepspace)
 
 					else--call macro/function
 						pure_lua_line = false
+						local is_struct
+						if command == "begin" then
+							is_struct = true
+							line = line:gsub('^%s*', '')
+							command = line:match('^%w+')
+							line = line:sub(#command+1, -1)
+						end
+
 						if line:match('^%(%s*%)') then
 							line = line:gsub('^%(%s*%)', '')
 							writevariable(command)
+						
 						elseif line:match('^%(') then
 							line = line:gsub('^%(', '')
 							writebeginfcall (command)
@@ -271,7 +302,16 @@ function plume:transpile (code, keepspace)
 							writebeginarg ()
 							incindent ()
 
-							table.insert(stack, {name="call", deep=1})
+							table.insert(stack, {name="call", deep=1, is_struct=is_struct})
+						
+						elseif is_struct then
+							writebeginfcall (command)
+							incindent ()
+							writebeginarg ()
+							incindent ()
+
+							table.insert(stack, {name="struct"})
+						
 						else
 							writevariable(command)
 						end
@@ -412,6 +452,10 @@ end
 
 function plume:pop ()
 	return table.remove(self.stack)
+end
+
+function plume:call (f, ...)
+	local args = {...}
 end
 
 function plume:render(code, optns)
