@@ -131,11 +131,20 @@ for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
 	result    = table.concat(result, "")
 
 	plume:reset ()
-	local output  = plume:render(plumecode)
-	local soutput = output:tostring()
+	local sucess, output  = pcall(plume.render, plume, plumecode)
+	local soutput
+	if sucess then
+		soutput = output:tostring()
+	end
+
+
 
 	n_test = n_test + 1
-	if soutput ~= result then
+	if not sucess then
+		if show_error then
+			print('Test ' .. name .. ' failed with error:' .. output)
+		end
+	elseif soutput ~= result then
 		if show_error then
 			print('Test ' .. name .. ' failed :')
 			print_diff (result, soutput)
