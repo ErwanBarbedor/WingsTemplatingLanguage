@@ -150,6 +150,18 @@ bar space bar
 
 #-- END
 
+#-- TEST : macro with named args 6
+#macro foo bar #end
+#macro cat(x=#foo)
+	#x
+#end
+#cat
+#-- RESULT
+
+ bar 
+
+#-- END
+
 #-- TEST : simple function
 #function foo return "bar" #end #foo
 #-- RESULT
