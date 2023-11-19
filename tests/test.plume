@@ -100,6 +100,56 @@ foo foo
 
 #-- END
 
+#-- TEST : macro with named args 1
+#macro double(x=bar)
+	#x #x
+#end
+#double(foo)
+#-- RESULT
+bar bar
+
+#-- END
+
+#-- TEST : macro with named args 2
+#macro double(x=bar)
+	#x #x
+#end
+#double(x=foo)
+#-- RESULT
+foo foo
+
+#-- END
+
+#-- TEST : macro with named args 3
+#macro cat(x, y=bar)
+	#x#y
+#end
+#cat(foo)
+#-- RESULT
+foobar
+
+#-- END
+
+#-- TEST : macro with named args 4
+#macro cat(x, y=bar)
+	#x#y
+#end
+#cat(foo, y=foo)
+#-- RESULT
+foofoo
+
+#-- END
+
+#-- TEST : macro with named args 5
+#macro cat(x=bar space bar)
+	#x
+#end
+#cat
+#-- RESULT
+bar space bar
+
+#-- END
+
 #-- TEST : simple function
 #function foo return "bar" #end #foo
 #-- RESULT

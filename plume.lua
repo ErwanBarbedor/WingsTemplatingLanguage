@@ -23,7 +23,7 @@ function plume:reset ()
 	plume.env = {}
 	plume.env.plume = plume
 	plume.stack = {}
-	plume.finfo = {} -- information for function args
+	plume.function_args = setmetatable({}, {__mode="k"}) -- information for function args
 
 	local version
 	if jit then
@@ -36,6 +36,8 @@ function plume:reset ()
 		plume.env[name] = _G[name]
 	end
 end
+
+
 
 function plume:transpile (code, keepspace)
 	local chuncks = {}
@@ -71,19 +73,56 @@ function plume:transpile (code, keepspace)
 	end
 
 	local function writebeginfcall(s)
-		table.insert(chunck, '\n' .. indent .. 'plume:write(' .. s .. '(')
+		table.insert(chunck, '\n' .. indent .. 'plume:call(' .. s .. ', {')
 	end
 
 	local function writeendfcall()
-		table.insert(chunck, '\n' .. indent .. '))')
+		table.insert(chunck, '\n' .. indent .. '})')
+	end
+
+	local function writenamedarg (line)
+		local name = line:match('^%s*%w+=')
+		if name then
+			line = line:sub(#name+1, -1)
+			table.insert(chunck, '\n' .. indent .. name .. 'function()\n' .. indent .. '\tplume:push()')
+		else
+			table.insert(chunck, '\n' .. indent .. 'function()\n' .. indent .. '\tplume:push()')
+		end
+		return line
 	end
 
 	local function writebeginarg ()
-		table.insert(chunck, '\n' .. indent .. '(function()\n' .. indent .. '\tplume:push()')
+		table.insert(chunck, '\n' .. indent .. 'function()\n' .. indent .. '\tplume:push()')
 	end
 
 	local function writeendarg ()
-		table.insert(chunck, '\n' .. indent .. 'return plume:pop()\n' .. indent:sub(1, -2) .. 'end)()')
+		table.insert(chunck, '\n' .. indent .. 'return plume:pop()\n' .. indent:sub(1, -2) .. 'end')
+	end
+
+	local function extract_args(args)
+		args = args:sub(2, -2)
+		
+		local names = {}
+		local infos = {}
+		
+		for arg in args:gmatch('[^,]+') do
+			arg = arg:gsub('^%s', ''):gsub('%s$', '')
+			local name = arg:match('^%w+=')
+			if name then
+				value = arg:sub(#name+1, -1):gsub('^%s', '')
+				name = name:sub(1, -2)
+
+				table.insert(names, name)
+				table.insert(infos, "{name='" .. name .. "', value=[[" .. value .. "]]}")
+			else
+				table.insert(names, arg)
+				table.insert(infos, "{name='" .. arg .. "'}")
+			end
+		end
+
+		return 
+			'(' .. table.concat(names, ', ') .. ')',
+			'{' .. table.concat(infos, ', ') .. '}'
 	end
 
 	local noline = 0
@@ -91,6 +130,7 @@ function plume:transpile (code, keepspace)
 		chunck = {}
 		noline = noline + 1
 
+		local is_last_line = not line:match('\n$')
 
 		if not keepspace and not (stack[#stack] or {}).lua then
 			line = line:gsub('^' .. indent, '')
@@ -175,17 +215,20 @@ function plume:transpile (code, keepspace)
 					writeendarg ()
 					decindent ()
 					writelua(',')
-					writebeginarg ()
+					line = writenamedarg (line)
 					incindent()
 				elseif top.lua then
 					if command == "end" and top.name == "lua" then
 						table.remove(stack)
-						writelua('\n' .. indent .. '-- End raw lua code\n', true)
+
 
 					elseif command == "end" and top.name == "function" then
 						table.remove(stack)
 						decindent ()
 						writelua('\n' .. indent .. 'end')
+
+						writelua('\n' .. indent .. 
+								'plume.function_args[' .. top.fname .. '] = ' .. top.args)
 
 					elseif command == "do" and (top.name == "for" or top.name == "while") then
 						table.remove(stack)
@@ -209,7 +252,6 @@ function plume:transpile (code, keepspace)
 						writelua('\n' .. indent .. '-- Begin raw lua code\n', true)
 
 					elseif command == "function" then
-						table.insert(stack, {name="function", lua=true})
 						local space, name = line:match('^(%s*)(%w+)')
 						line = line:sub((#space+#name)+1, -1)
 						local args = line:match('%b()')
@@ -219,11 +261,14 @@ function plume:transpile (code, keepspace)
 							args = "()"
 						end
 
-						writelua('\n' .. indent.. 'function ' .. name .. ' ' .. args)
+						local args_name, args_info = extract_args (args)
+
+						writelua('\n' .. indent.. 'function ' .. name .. ' ' .. args_name)
 						incindent ()
 
+						table.insert(stack, {name="function", lua=true, args=args_info, fname=name})
+
 					elseif command == "macro" then
-						table.insert(stack, {name="macro"})
 						local space, name = line:match('^(%s*)(%w+)')
 						line = line:sub((#space+#name)+1, -1)
 						local args = line:match('^%b()')
@@ -233,9 +278,12 @@ function plume:transpile (code, keepspace)
 							args = "()"
 						end
 
-						writelua('\n' .. indent.. 'function ' .. name .. ' ' .. args)
+						local args_name, args_info = extract_args (args)
+
+						writelua('\n' .. indent.. 'function ' .. name .. ' ' .. args_name)
 						incindent ()
 						writelua('\n' .. indent .. 'plume:push()')
+						table.insert(stack, {name="macro", args=args_info, fname=name})
 						
 					elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
 						table.insert(stack, {lua=true, name=command})
@@ -260,6 +308,11 @@ function plume:transpile (code, keepspace)
 						else
 							decindent ()
 							writelua('\n' .. indent .. 'end')
+						end
+
+						if top.name == 'macro' then
+							writelua('\n' .. indent .. 
+								'plume.function_args[' .. top.fname .. '] = ' .. top.args)
 						end
 
 					elseif command == "(" then
@@ -299,7 +352,7 @@ function plume:transpile (code, keepspace)
 							line = line:gsub('^%(', '')
 							writebeginfcall (command)
 							incindent ()
-							writebeginarg ()
+							line = writenamedarg(line)
 							incindent ()
 
 							table.insert(stack, {name="call", deep=1, is_struct=is_struct})
@@ -323,7 +376,7 @@ function plume:transpile (code, keepspace)
 			end
 			
 		end
-		if not pure_lua_line or keepspace then
+		if (not pure_lua_line or keepspace ) and not is_last_line then
 			writetext('\n')
 		end
 
@@ -354,7 +407,7 @@ function plume:write (x)
 	elseif type(x) == "string" or type(x) == "number" then
 		table.insert(self.stack[#self.stack], self:Token(x))
 	elseif type(x) == 'function' then
-		return plume:write(x())
+		return plume:call(x)
 	end
 end
 
@@ -454,8 +507,54 @@ function plume:pop ()
 	return table.remove(self.stack)
 end
 
-function plume:call (f, ...)
-	local args = {...}
+function plume:call (f, given_args)
+	-- Manage positional and named arguments
+	-- but only for function declared inside plume.
+	-- If not, all named arguments will be put in a table
+	-- and given as the last argument.
+	local given_args = given_args or {}
+
+	local positional_args = {}
+	local named_args = {}
+
+	for _, v in ipairs(given_args) do
+		table.insert(positional_args, v())
+	end
+
+	for k, v in pairs(given_args) do
+		if not tonumber(k) then
+			named_args[k] = v()
+		end
+	end
+
+	local info = self.function_args[f]
+
+	if not info then
+		plume:write(
+			f( (unpack or table.unpack) (positional_args), named_args)
+		)
+		return
+	end
+
+	local args = {}
+	for i, arg_info in ipairs(info) do
+		local value
+		if arg_info.value then
+			if named_args[arg_info.name] then
+				value = named_args[arg_info.name]
+			else
+				value = plume:render(arg_info.value)
+			end
+		else
+			value = positional_args[i]
+		end
+		table.insert(args, value)
+	end
+
+	plume:write(
+		-- Compatibily for lua 5.1
+		f( (unpack or table.unpack) (args))
+	)
 end
 
 function plume:render(code, optns)
