@@ -242,3 +242,19 @@ bar space bar
 
  foo
  #-- END
+
+#---------------------------------
+
+#-- TEST : include 1
+#include(toinclude)
+#-- RESULT
+foo
+#-- END
+
+#-- TEST : include 1
+#include(lib)
+#foo
+#-- RESULT
+
+ bar 
+#-- END

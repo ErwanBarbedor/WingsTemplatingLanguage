@@ -5,17 +5,16 @@ local function dummy () end
 
 -- Predefined list of standard Lua variables/functions for various versions
 -- These are intended to be provided as a part of sandbox environments to execute user code safely
--- Note that dofile and require arn't included
 local LUA_STD = {
-    ["5.1"]="_VERSION arg assert collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall",
+    ["5.1"]="_VERSION arg assert collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall",
 
-    ["5.2"]="_VERSION arg assert bit32 collectgarbage coroutine debug error getmetatable io ipairs load loadfile loadstring math module next os package pairs pcall print rawequal rawget rawlen rawset select setmetatable string table tonumber tostring type unpack xpcall xpcall",
+    ["5.2"]="_VERSION arg assert bit32 collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile loadstring math module next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type unpack xpcall xpcall",
 
-    ["5.3"]="_VERSION arg assert bit32 collectgarbage coroutine debug error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 xpcall",
+    ["5.3"]="_VERSION arg assert bit32 collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 xpcall",
 
-    ["5.4"]="_VERSION arg assert collectgarbage coroutine debug error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset select setmetatable string table tonumber tostring type utf8 warn xpcall",
+    ["5.4"]="_VERSION arg assert collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 warn xpcall",
 
-    jit="_VERSION arg assert bit collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall"
+    jit="_VERSION arg assert bit collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall"
 }
 
 Plume.patterns = {
@@ -30,14 +29,22 @@ function Plume:new ()
         plume[k] = v
     end
 
-    -- Create a new empty environment
-    plume.env = {plume=plume}
+    -- Create a new environment
+    plume.env = {
+        plume=plume,
+        include=function (...) return plume:include (...) end,
+    }
+
+    -- Inherit from package.path
+    plume.path=package.path:gsub('%.lua', '.plume')
 
     -- Stack used for managing nested constructs in the templating language
     plume.stack = {}
 
     -- Weak table holding function argument information
     plume.function_args = setmetatable({}, {__mode="k"})
+
+    plume.type = "plume"
 
     local version
     if jit then
@@ -445,7 +452,39 @@ function Plume:transpile (code)
     return "plume:push ()\n\n" .. table.concat (chuncks, '') .. "\n\nreturn plume:pop ()"
 end
 
+function Plume:include(name)
+    -- This function work like require :
+    -- Search for a file named 'name.plume' and 'execute it'
+    -- In the context of plume, the file will be rendered and added to the output
+    -- Unlike require, result will not be cached
+    local failed_path = {}
+    local file
+
+    -- name is a TokenList, so we need to convert it
+    name = name:tostring()
+
+    for path in self.path:gmatch('[^;]+') do
+        local path = path:gsub('?', name)
+        file = io.open(path)
+        if file then
+            break
+        else
+            table.insert(failed_path, path)
+        end
+    end
+
+    if not file then
+        error ("plume file '" .. name .. "' not found:\n    no file " .. table.concat(failed_path, '\n    no file '))
+    end
+
+    local plumecode = file:read "*a"
+    local result    = self:render(plumecode)
+    
+    return result
+end
+
 function Plume:write (x)
+    -- Add a value to the output.
     if type(x) == "table" then
         if x.type == "token" then
             table.insert(self.stack[#self.stack], x)
@@ -558,10 +597,8 @@ function Plume:pop ()
 end
 
 function Plume:call (f, given_args)
-    -- Manage positional and named arguments
-    -- but only for function declared inside plume.
-    -- If not, all named arguments will be put in a table
-    -- and given as the last argument.
+    -- Manage positional and named arguments, but only for function declared inside plume.
+    -- If not, all named arguments will be ignored.
     local given_args = given_args or {}
 
     local positional_args = {}
@@ -581,7 +618,8 @@ function Plume:call (f, given_args)
 
     if not info then
         self:write(
-            f( (unpack or table.unpack) (positional_args), named_args)
+
+            f( (unpack or table.unpack) (positional_args) )
         )
         return
     end
@@ -607,18 +645,13 @@ function Plume:call (f, given_args)
     )
 end
 
-function Plume:render(code, optns)
+function Plume:render(code)
     optns = optns or {}
     local luacode = self:transpile (code, optns.keepspace)
 
-    if optns.saveluacode then
-        local f = io.open(optns.saveluacode .. ".lua", 'w')
-        f:write(luacode)
-        f:close()
-    end
-
     -- Compatibily for lua 5.1
-    local f, err = (loadstring or load) (luacode, (optns.saveluacode or "plumecode"), 't', self.env)
+    -- parameters are only for lua>5.2
+    local f, err = (loadstring or load) (luacode, "plumecode", 't', self.env)
     if not f then
         error(err)
     end
