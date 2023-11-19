@@ -100,7 +100,7 @@ local function print_diff (a, b)
 end
 
 package.path = package.path .. ";../?.lua"
-local plume = require "plume"
+local Plume = require "plume"
 local tests = io.open('test.plume'):read'*a'
 
 local n_test   = 0
@@ -130,7 +130,7 @@ for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
 	plumecode = table.concat(plumecode, "")
 	result    = table.concat(result, "")
 
-	plume:reset ()
+	local plume = Plume:new ()
 	local sucess, output  = pcall(plume.render, plume, plumecode)
 	local soutput
 	if sucess then

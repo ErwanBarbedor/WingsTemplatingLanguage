@@ -1,4 +1,4 @@
-local plume = {}
+local Plume = {}
 
 -- Empty function used as a placeholder for compatibility
 local function dummy () end
@@ -18,11 +18,17 @@ local LUA_STD = {
 	jit="_VERSION arg assert bit collectgarbage coroutine debug error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset select setfenv setmetatable string table tonumber tostring type unpack xpcall"
 }
 
-plume.patterns = {
+Plume.patterns = {
 	escape="#"
 }
 
-function plume:reset ()
+function Plume:new ()
+	local plume = {}
+
+	for k, v in pairs(Plume) do
+		plume[k] = v
+	end
+
 	-- Create a new empty environment
 	plume.env = {plume=plume}
 
@@ -43,9 +49,11 @@ function plume:reset ()
 	for name in LUA_STD[version]:gmatch('%S+') do
 		plume.env[name] = _G[name]
 	end
+
+	return plume
 end
 
-function plume:transpile (code)
+function Plume:transpile (code)
 	-- Define a method to transpile Plume code into Lua
 
 	-- Table to hold code chuncks, one chunck by Plume line.
@@ -422,23 +430,23 @@ function plume:transpile (code)
 	return "plume:push ()\n\n" .. table.concat (chuncks, '') .. "\n\nreturn plume:pop ()"
 end
 
-function plume:write (x)
+function Plume:write (x)
 	if type(x) == "table" then
 		if x.type == "token" then
 			table.insert(self.stack[#self.stack], x)
 		else
 			for _, xx in ipairs(x) do
-				plume:write(xx)
+				self:write(xx)
 			end
 		end
 	elseif type(x) == "string" or type(x) == "number" then
 		table.insert(self.stack[#self.stack], self:Token(x))
 	elseif type(x) == 'function' then
-		return plume:call(x)
+		return self:call(x)
 	end
 end
 
-function plume:TokenList ()
+function Plume:TokenList ()
 	local tl = {}
 	tl.type = "tokenlist"
 
@@ -456,13 +464,13 @@ function plume:TokenList ()
 
 	local mtl = {}
 	function mtl.__concat (a, b)
-		local result = plume:TokenList ()
+		local result = self:TokenList ()
 
 		if type(a) == "number" or type (a) == "string" then
-			a = {plume:Token(a)}
+			a = {self:Token(a)}
 		end
 		if type(b) == "number" or type (b) == "string" then
-			b = {plume:Token(b)}
+			b = {self:Token(b)}
 		end
 		
 		for k, v in ipairs (a) do
@@ -514,7 +522,7 @@ function plume:TokenList ()
 	return tl
 end
 
-function plume:Token (x)
+function Plume:Token (x)
 	local tk = {}
 	tk.content = x
 	tk.type = "token"
@@ -526,15 +534,15 @@ function plume:Token (x)
 	return tk
 end
 
-function plume:push ()
+function Plume:push ()
 	table.insert(self.stack, self:TokenList ())
 end
 
-function plume:pop ()
+function Plume:pop ()
 	return table.remove(self.stack)
 end
 
-function plume:call (f, given_args)
+function Plume:call (f, given_args)
 	-- Manage positional and named arguments
 	-- but only for function declared inside plume.
 	-- If not, all named arguments will be put in a table
@@ -557,7 +565,7 @@ function plume:call (f, given_args)
 	local info = self.function_args[f]
 
 	if not info then
-		plume:write(
+		self:write(
 			f( (unpack or table.unpack) (positional_args), named_args)
 		)
 		return
@@ -570,7 +578,7 @@ function plume:call (f, given_args)
 			if named_args[arg_info.name] then
 				value = named_args[arg_info.name]
 			else
-				value = plume:render(arg_info.value)
+				value = self:render(arg_info.value)
 			end
 		else
 			value = positional_args[i]
@@ -578,19 +586,15 @@ function plume:call (f, given_args)
 		table.insert(args, value)
 	end
 
-	plume:write(
+	self:write(
 		-- Compatibily for lua 5.1
 		f( (unpack or table.unpack) (args))
 	)
 end
 
-function plume:render(code, optns)
-	if not plume.env then
-		plume:reset ()
-	end
-
+function Plume:render(code, optns)
 	optns = optns or {}
-	local luacode = plume:transpile (code, optns.keepspace)
+	local luacode = self:transpile (code, optns.keepspace)
 
 	if optns.saveluacode then
 		local f = io.open(optns.saveluacode .. ".lua", 'w')
@@ -599,13 +603,13 @@ function plume:render(code, optns)
 	end
 
 	-- Compatibily for lua 5.1
-	local f, err = (loadstring or load) (luacode, (optns.saveluacode or "plumecode"), 't', plume.env)
+	local f, err = (loadstring or load) (luacode, (optns.saveluacode or "plumecode"), 't', self.env)
 	if not f then
 		error(err)
 	end
 
 	-- Compatibily for lua 5.1
-	(setfenv or dummy) (f, plume.env)
+	(setfenv or dummy) (f, self.env)
 
 	local sucess, result = pcall(f)
 	if not sucess then
@@ -616,4 +620,4 @@ function plume:render(code, optns)
 	return result
 end
 
-return plume
+return Plume
