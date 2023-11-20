@@ -102,7 +102,7 @@ foo foo
 #macro double(x=bar)
     #x #x
 #end
-#double(foo)
+#double
 #-- RESULT
 bar bar
 
@@ -175,16 +175,16 @@ bar space bar
 foofoo
 #-- END
 
-#-- TEST : macro with named args 1
+#-- TEST : function with named args 1
 #function double(x=bar)
     return x .. " " .. x
 #end
-#double(foo)
+#double
 #-- RESULT
 bar bar
 #-- END
 
-#-- TEST : macro with named args 2
+#-- TEST : function with named args 2
 #function double(x=bar)
     return x .. " " .. x
 #end
@@ -193,7 +193,7 @@ bar bar
 foo foo
 #-- END
 
-#-- TEST : macro with named args 3
+#-- TEST : function with named args 3
 #function cat(x, y=bar)
     return x..y
 #end
@@ -202,7 +202,7 @@ foo foo
 foobar
 #-- END
 
-#-- TEST : macro with named args 4
+#-- TEST : function with named args 4
 #function cat(x, y=bar)
     return x..y
 #end
@@ -211,7 +211,7 @@ foobar
 foofoo
 #-- END
 
-#-- TEST : macro with named args 5
+#-- TEST : function with named args 5
 #function cat(x=bar space bar)
     return x
 #end
@@ -220,7 +220,7 @@ foofoo
 bar space bar
 #-- END
 
-#-- TEST : macro with named args 6
+#-- TEST : function with named args 6
 #macro foo bar #end
 #function cat(x=#foo)
     return x
@@ -229,6 +229,33 @@ bar space bar
 #-- RESULT
 
  bar 
+#-- END
+
+#-- TEST : function with named args 7
+#function cat(x, y)
+    return x .. (y or "")
+#end
+#cat(x=5)
+#-- RESULT
+5
+#-- END
+
+#-- TEST : function with named args 8
+#function cat(x, y)
+    return (x or "") .. y
+#end
+#cat(y=5)
+#-- RESULT
+5
+#-- END
+
+#-- TEST : function with named args 9
+#function cat(x, y)
+    return (x or "") .. y
+#end
+#cat(y=5, 1)
+#-- RESULT
+ 15
 #-- END
 
 #---------------------------------

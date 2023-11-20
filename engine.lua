@@ -81,22 +81,38 @@ function Plume:call (f, given_args)
         table.insert(args, body)
     end
 
-    for i, arg_info in ipairs(info) do
-        local value
-        if arg_info.value then
-            if named_args[arg_info.name] then
-                value = named_args[arg_info.name]
-            else
-                value = self:render(arg_info.value)
+    -- First set named argument
+    for name, value in pairs(named_args) do
+        for i, arg_info in ipairs(info) do
+            if arg_info.name == name then
+                args[i] = value
             end
-        else
-            value = positional_args[i]
         end
-        table.insert(args, value)
+    end
+
+    -- Then fill the gap with positional arguments
+    local first_empy = 1
+    for _, value in pairs(positional_args) do
+
+        while first_empy <= #info do
+            if not args[first_empy] then
+                args[first_empy] = value
+                break
+            end
+            first_empy = first_empy + 1
+            
+        end
+    end
+
+    -- Finally, the remaining arguments that have a default value get it
+    for i, arg_info in ipairs(info) do
+        if arg_info.value and not args[i] then
+            args[i] = self:render(arg_info.value)
+        end
     end
 
     self:write(
         -- Compatibily for lua 5.1
-        f( (unpack or table.unpack) (args))
+        f( (unpack or table.unpack) (args, 1, #info) )
     )
 end

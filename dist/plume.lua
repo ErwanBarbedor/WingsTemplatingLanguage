@@ -63,34 +63,42 @@ Plume.transpiler = {}
 
 Plume.transpiler.patterns = {
     -- Only for output lua lisibility
-    indent           = "    ",
+    indent                 = "    ",
 
     -- Macro, function and argument name format
-    identifier       = "[%a_][%a_0-9]*",
+    identifier             = "[%a_][%a_0-9]*",
 
     -- Edit this value may break lua code.
-    lua_identifier   = "[%a_][%a_0-9]*",
+    lua_identifier         = "[%a_][%a_0-9]*",
 
     -- All theses token must be one string long,
     -- the transpiler assumes that is the case.
-    escape           = "#",
-    open_call        = "(",
-    close_call       = ")",
-    arg_separator    = ",",
-    comment          = "-"
+    escape                 = "#",
+    open_call              = "(",
+    close_call             = ")",
+    arg_separator          = ",",
+    comment                = "-",
+    -- A prefix for make certain name invalid for
+    -- an plume identifier.
+    special_name_prefix    = "!"
 }
 
 function Plume.transpiler:compile_patterns ()
+    -- capture, capture_call and capture_inline_lua divide the line in 3 parts.
+    -- Before the token, token itself, after the token.
+
+    -- standard capture, only the escape char
     self.patterns.capture          = '(.-)(%' .. self.patterns.escape .. ')(.*)'
 
+    -- if we are inside a call, check for call end or new argument
     self.patterns.capture_call     = '(.-)(['
         .. '%' .. self.patterns.escape
         .. '%' .. self.patterns.open_call
         .. '%' .. self.patterns.close_call
         .. '%' .. self.patterns.arg_separator .. '])(.*)'
 
+    -- if we are inside lua, check only for closing.
     self.patterns.capture_inline_lua = '(.-)(['
-        .. '%' .. self.patterns.escape
         .. '%' .. self.patterns.open_call
         .. '%' .. self.patterns.close_call .. '])(.*)'
 end
@@ -157,8 +165,8 @@ function Plume.transpiler:transpile (code)
         return line
     end
 
-    local function writebeginarg ()
-        table.insert(chunck, '\n' .. indent .. 'function()\n' .. indent .. '\tplume:push()')
+    local function writebeginarg (prefix)
+        table.insert(chunck, '\n' .. indent .. (prefix or "") .. 'function()\n' .. indent .. '\tplume:push()')
     end
 
     local function writeendarg ()
@@ -279,7 +287,7 @@ function Plume.transpiler:transpile (code)
                             writeendarg ()
                             decindent ()
                             writelua(',')
-                            writebeginarg ()
+                            writebeginarg ("['"..self.patterns.special_name_prefix.."body'] = ")
                             incindent()
                             table.insert(stack, {name="struct"})
                         else
@@ -456,10 +464,14 @@ function Plume.transpiler:transpile (code)
 
                             table.insert(stack, {name="call", deep=1, is_struct=is_struct})
                         
+                        -- Rename is_struct to begin_sugar
+                        -- Duplicate code with arg_separator check
                         elseif is_struct then
                             writebeginfcall (command)
                             incindent ()
-                            writebeginarg ()
+
+                            writebeginarg ("['"..self.patterns.special_name_prefix.."body'] = ")
+                            
                             incindent ()
 
                             table.insert(stack, {name="struct"})
@@ -494,6 +506,9 @@ function Plume.transpiler:transpile (code)
     return "plume:push ()\n\n" .. table.concat (chuncks, '') .. "\n\nreturn plume:pop ()"
 end
 
+
+-- Functions used by Plume in the final code to manage text flow and macro calls.
+
 function Plume:write (x)
     -- Add a value to the output.
     if type(x) == "table" then
@@ -512,15 +527,20 @@ function Plume:write (x)
 end
 
 function Plume:push ()
+    -- Adds a new TokenList to the stack.
+    -- This TokenList will receive all output tokens from now.
     table.insert(self.stack, self:TokenList ())
 end
 
 function Plume:pop ()
+    -- Removes a TokenList from the stack.
+    -- It will either be written to the parent, or returned as the final value.
+    -- (possibly after being passed to a function).
     return table.remove(self.stack)
 end
 
 function Plume:call (f, given_args)
-    -- Manage positional and named arguments, but only for function declared inside plume.
+    -- Handles positional and named arguments, but only for functions declared inside Plume.
     -- If not, all named arguments will be ignored.
     local given_args = given_args or {}
 
@@ -548,23 +568,47 @@ function Plume:call (f, given_args)
     end
 
     local args = {}
-    for i, arg_info in ipairs(info) do
-        local value
-        if arg_info.value then
-            if named_args[arg_info.name] then
-                value = named_args[arg_info.name]
-            else
-                value = self:render(arg_info.value)
+    -- Handle begin sugar
+    -- Warning : using transpiler config after the transpilation,
+    -- so a config change may break the code.
+    local body = named_args[self.transpiler.patterns.special_name_prefix .. 'body']
+    if body then
+        table.insert(args, body)
+    end
+
+    -- First set named argument
+    for name, value in pairs(named_args) do
+        for i, arg_info in ipairs(info) do
+            if arg_info.name == name then
+                args[i] = value
             end
-        else
-            value = positional_args[i]
         end
-        table.insert(args, value)
+    end
+
+    -- Then fill the gap with positional arguments
+    local first_empy = 1
+    for _, value in pairs(positional_args) do
+
+        while first_empy <= #info do
+            if not args[first_empy] then
+                args[first_empy] = value
+                break
+            end
+            first_empy = first_empy + 1
+            
+        end
+    end
+
+    -- Finally, the remaining arguments that have a default value get it
+    for i, arg_info in ipairs(info) do
+        if arg_info.value and not args[i] then
+            args[i] = self:render(arg_info.value)
+        end
     end
 
     self:write(
         -- Compatibily for lua 5.1
-        f( (unpack or table.unpack) (args))
+        f( (unpack or table.unpack) (args, 1, #info) )
     )
 end
 
@@ -689,6 +733,9 @@ end
 
 
 function Plume:new ()
+    -- Create Plume interpreter instance.
+    -- Each instance has it's own environnement and configuration.
+
     local plume = Plume.utils.copy (Plume)
 
     -- Create a new environment
@@ -726,6 +773,8 @@ function Plume:new ()
 end
 
 function Plume:render(code)
+    -- Transpile the code, then execute it and return the result
+
     local luacode = self.transpiler:transpile (code)
 
     -- Compatibily for lua 5.1
