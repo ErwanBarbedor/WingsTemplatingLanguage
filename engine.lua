@@ -11,6 +11,9 @@ See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
 ]]
+
+-- Functions used by Plume in the final code to manage text flow and macro calls.
+
 function Plume:write (x)
     -- Add a value to the output.
     if type(x) == "table" then
@@ -29,15 +32,20 @@ function Plume:write (x)
 end
 
 function Plume:push ()
+    -- Adds a new TokenList to the stack.
+    -- This TokenList will receive all output tokens from now.
     table.insert(self.stack, self:TokenList ())
 end
 
 function Plume:pop ()
+    -- Removes a TokenList from the stack.
+    -- It will either be written to the parent, or returned as the final value.
+    -- (possibly after being passed to a function).
     return table.remove(self.stack)
 end
 
 function Plume:call (f, given_args)
-    -- Manage positional and named arguments, but only for function declared inside plume.
+    -- Handles positional and named arguments, but only for functions declared inside Plume.
     -- If not, all named arguments will be ignored.
     local given_args = given_args or {}
 
