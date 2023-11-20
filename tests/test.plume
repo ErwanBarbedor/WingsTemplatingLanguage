@@ -233,15 +233,27 @@ bar space bar
 
 #---------------------------------
 
-#-- TEST : struct 1
-#macro foo(x) #x #end
+#-- TEST : begin sugar 1
+#macro foo(x) <#x> #end
 #begin foo
     foo
 #end
 #-- RESULT
 
- foo
- #-- END
+ <foo
+> #-- END
+
+#-- TEST : begin sugar 2
+#macro foo(x, y) <#y:#x> #end
+#begin foo(bar)
+    foo
+#end
+#-- RESULT
+
+ <bar:
+foo
+> #-- END
+
 
 #---------------------------------
 

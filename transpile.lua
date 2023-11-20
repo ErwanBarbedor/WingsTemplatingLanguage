@@ -73,8 +73,8 @@ function Plume.transpiler:transpile (code)
         return line
     end
 
-    local function writebeginarg ()
-        table.insert(chunck, '\n' .. indent .. 'function()\n' .. indent .. '\tplume:push()')
+    local function writebeginarg (prefix)
+        table.insert(chunck, '\n' .. indent .. (prefix or "") .. 'function()\n' .. indent .. '\tplume:push()')
     end
 
     local function writeendarg ()
@@ -195,7 +195,7 @@ function Plume.transpiler:transpile (code)
                             writeendarg ()
                             decindent ()
                             writelua(',')
-                            writebeginarg ()
+                            writebeginarg ("['"..self.patterns.special_name_prefix.."body'] = ")
                             incindent()
                             table.insert(stack, {name="struct"})
                         else
@@ -372,10 +372,14 @@ function Plume.transpiler:transpile (code)
 
                             table.insert(stack, {name="call", deep=1, is_struct=is_struct})
                         
+                        -- Rename is_struct to begin_sugar
+                        -- Duplicate code with arg_separator check
                         elseif is_struct then
                             writebeginfcall (command)
                             incindent ()
-                            writebeginarg ()
+
+                            writebeginarg ("['"..self.patterns.special_name_prefix.."body'] = ")
+                            
                             incindent ()
 
                             table.insert(stack, {name="struct"})

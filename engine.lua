@@ -65,6 +65,14 @@ function Plume:call (f, given_args)
     end
 
     local args = {}
+    -- Handle begin sugar
+    -- Warning : using transpiler config after the transpilation,
+    -- so a config change may break the code.
+    local body = named_args[self.transpiler.patterns.special_name_prefix .. 'body']
+    if body then
+        table.insert(args, body)
+    end
+
     for i, arg_info in ipairs(info) do
         local value
         if arg_info.value then

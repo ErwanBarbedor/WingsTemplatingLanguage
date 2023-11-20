@@ -18,21 +18,24 @@ You should have received a copy of the GNU General Public License along with Lua
 
 Plume.transpiler.patterns = {
     -- Only for output lua lisibility
-    indent           = "    ",
+    indent                 = "    ",
 
     -- Macro, function and argument name format
-    identifier       = "[%a_][%a_0-9]*",
+    identifier             = "[%a_][%a_0-9]*",
 
     -- Edit this value may break lua code.
-    lua_identifier   = "[%a_][%a_0-9]*",
+    lua_identifier         = "[%a_][%a_0-9]*",
 
     -- All theses token must be one string long,
     -- the transpiler assumes that is the case.
-    escape           = "#",
-    open_call        = "(",
-    close_call       = ")",
-    arg_separator    = ",",
-    comment          = "-"
+    escape                 = "#",
+    open_call              = "(",
+    close_call             = ")",
+    arg_separator          = ",",
+    comment                = "-",
+    -- A prefix for make certain name invalid for
+    -- an plume identifier.
+    special_name_prefix    = "!"
 }
 
 function Plume.transpiler:compile_patterns ()
