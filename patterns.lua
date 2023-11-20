@@ -36,16 +36,21 @@ Plume.transpiler.patterns = {
 }
 
 function Plume.transpiler:compile_patterns ()
+    -- capture, capture_call and capture_inline_lua divide the line in 3 parts.
+    -- Before the token, token itself, after the token.
+
+    -- standard capture, only the escape char
     self.patterns.capture          = '(.-)(%' .. self.patterns.escape .. ')(.*)'
 
+    -- if we are inside a call, check for call end or new argument
     self.patterns.capture_call     = '(.-)(['
         .. '%' .. self.patterns.escape
         .. '%' .. self.patterns.open_call
         .. '%' .. self.patterns.close_call
         .. '%' .. self.patterns.arg_separator .. '])(.*)'
 
+    -- if we are inside lua, check only for closing.
     self.patterns.capture_inline_lua = '(.-)(['
-        .. '%' .. self.patterns.escape
         .. '%' .. self.patterns.open_call
         .. '%' .. self.patterns.close_call .. '])(.*)'
 end
