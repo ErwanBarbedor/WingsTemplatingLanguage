@@ -54,12 +54,9 @@ local function include (name)
 end
 -- >
 
-Plume.patterns = {
-    escape="#",
-    indent="    "
-}
-
 include 'utils'
+Plume.transpiler = {}
+include 'patterns'
 include 'transpile'
 include 'engine'
 include 'token'
@@ -86,6 +83,8 @@ function Plume:new ()
 
     plume.type = "plume"
 
+    plume.transpiler:compile_patterns ()
+
     local version
     if jit then
         version = "jit"
@@ -102,8 +101,7 @@ function Plume:new ()
 end
 
 function Plume:render(code)
-    optns = optns or {}
-    local luacode = self:transpile (code, optns.keepspace)
+    local luacode = self.transpiler:transpile (code)
 
     -- Compatibily for lua 5.1
     -- parameters are only for lua>5.2

@@ -11,7 +11,11 @@ See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
 ]]
-function Plume:transpile (code)
+
+function Plume.transpiler:check_lua_identifier ()
+end
+
+function Plume.transpiler:transpile (code)
     -- Define a method to transpile Plume code into Lua
 
     -- Table to hold code chuncks, one chunck by Plume line.
@@ -130,17 +134,17 @@ function Plume:transpile (code)
 
             -- Detect the next signifiant token.
             -- In most of case it will be the escape token,
-            -- but can be '(', ')' or ',' if we are inside a function call
+            -- but can be open_call , closing_call or arg_separator if we are inside a function call
             if top.lua then
                 if top.name == "lua-inline" then
-                    before, capture, after = line:match('(.-)([#%(%)])(.*)')
+                    before, capture, after = line:match(self.patterns.capture_inline_lua)
                 else
-                    before, capture, after = line:match('(.-)(#)(.*)')
+                    before, capture, after = line:match(self.patterns.capture)
                 end
             elseif top.name == "call" then
-                before, capture, after = line:match('(.-)([#,%(%)])(.*)')
+                before, capture, after = line:match(self.patterns.capture_call)
             else
-                before, capture, after = line:match('(.-)(#)(.*)')
+                before, capture, after = line:match(self.patterns.capture)
             end
 
             -- Add texte before the signifiant token to the output
@@ -156,18 +160,22 @@ function Plume:transpile (code)
             if capture then
                 line = after
 
-                -- The command could be keyword, a commentary or '('.
+                -- The command could be keyword, a commentary or an opening.
                 local command
-                if capture == '#' then
-                    command = line:match '^%w+' or line:match '^%-%-' or line:match '^%('
+                if capture == self.patterns.escape then
+                    command = line:match ('^'  .. self.patterns.identifier)
+                           or line:match ('^'  .. self.patterns.comment)
+                           or line:match ('^%' .. self.patterns.open_call)
+
                     line = line:sub(#command+1, -1)
                 else
                     command = capture
                 end
 
                 -- Manage call first
-                if (command == "(" or command == ')') and (top.name == 'call' or top.name == "lua-inline") then
-                    if command == '(' then
+                if (command == self.patterns.open_call or command == self.patterns.close_call)
+                    and (top.name == 'call' or top.name == "lua-inline") then
+                    if command == self.patterns.open_call then
                         top.deep = top.deep+1
                     else
                         top.deep = top.deep-1
@@ -205,7 +213,7 @@ function Plume:transpile (code)
                             writelua(')')
                         end
                     end
-                elseif command == ',' and top.name == 'call' then
+                elseif command == self.patterns.arg_separator and top.name == 'call' then
                     -- Inside a call, push a new argument
                     writeendarg ()
                     decindent ()
@@ -252,7 +260,7 @@ function Plume:transpile (code)
 
                     elseif command == "function" then
                         -- Declare a new function and open a lua code chunck
-                        local space, name = line:match('^(%s*)(%w+)')
+                        local space, name = line:match('^(%s*)('..self.patterns.identifier..')')
                         line = line:sub((#space+#name)+1, -1)
                         local args = line:match('%b()')
                         if args then
@@ -270,7 +278,7 @@ function Plume:transpile (code)
 
                     elseif command == "macro" then
                         -- Declare a new function
-                        local space, name = line:match('^(%s*)(%w+)')
+                        local space, name = line:match('^(%s*)(' .. self.patterns.identifier .. ')')
                         line = line:sub((#space+#name)+1, -1)
                         local args = line:match('^%b()')
                         if args then
@@ -318,7 +326,7 @@ function Plume:transpile (code)
                                 'plume.function_args[' .. top.fname .. '] = ' .. top.args)
                         end
 
-                    elseif command == "(" then
+                    elseif command == self.patterns.open_call then
                         -- Enter lua-inline
                         local declaration = line:match('^%s*local%s+%w+%s*=%s*') or line:match('^%s*%w+%s*=%s*')
                         
@@ -334,7 +342,7 @@ function Plume:transpile (code)
                         
                         incindent ()
 
-                    elseif command == "--" then
+                    elseif command == self.patterns.comment then
                         break
 
                     else--call macro/function
@@ -343,7 +351,7 @@ function Plume:transpile (code)
                         if command == "begin" then
                             is_struct = true
                             line = line:gsub('^%s*', '')
-                            command = line:match('^%w+')
+                            command = line:match('^' .. self.patterns.identifier)
                             line = line:sub(#command+1, -1)
                         end
 
@@ -355,8 +363,8 @@ function Plume:transpile (code)
                             line = line:gsub('^%(%s*%)', '')
                             writevariable(command)
                         
-                        elseif line:match('^%(') then
-                            line = line:gsub('^%(', '')
+                        elseif line:match('^%' .. self.patterns.open_call) then
+                            line = line:sub(2, -1)
                             writebeginfcall (command)
                             incindent ()
                             line = writenamedarg(line)
