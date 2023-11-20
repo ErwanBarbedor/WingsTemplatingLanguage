@@ -64,6 +64,9 @@ include 'std'
 
 
 function Plume:new ()
+    -- Create Plume interpreter instance.
+    -- Each instance has it's own environnement and configuration.
+
     local plume = Plume.utils.copy (Plume)
 
     -- Create a new environment
@@ -101,6 +104,8 @@ function Plume:new ()
 end
 
 function Plume:render(code)
+    -- Transpile the code, then execute it and return the result
+
     local luacode = self.transpiler:transpile (code)
 
     -- Compatibily for lua 5.1
