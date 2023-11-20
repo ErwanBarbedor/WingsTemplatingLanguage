@@ -46,6 +46,20 @@ Plume.patterns = {
 }
 
 
+Plume.utils = {}
+
+function Plume.utils.copy (t)
+    local nt = {}
+    for k, v in pairs(t) do
+        if type(v) == 'table' then
+            nt[k] = Plume.utils.copy (v)
+        else
+            nt[k] = v
+        end
+    end
+    return nt
+end
+
 function Plume:transpile (code)
     -- Define a method to transpile Plume code into Lua
 
@@ -630,12 +644,9 @@ function Plume:include(name)
     return result
 end
 
-function Plume:new ()
-    local plume = {}
 
-    for k, v in pairs(Plume) do
-        plume[k] = v
-    end
+function Plume:new ()
+    local plume = Plume.utils.copy (Plume)
 
     -- Create a new environment
     plume.env = {

@@ -59,17 +59,15 @@ Plume.patterns = {
     indent="    "
 }
 
+include 'utils'
 include 'transpile'
 include 'engine'
 include 'token'
 include 'std'
 
-function Plume:new ()
-    local plume = {}
 
-    for k, v in pairs(Plume) do
-        plume[k] = v
-    end
+function Plume:new ()
+    local plume = Plume.utils.copy (Plume)
 
     -- Create a new environment
     plume.env = {
