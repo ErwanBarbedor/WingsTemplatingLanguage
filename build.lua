@@ -22,7 +22,7 @@ if alpha then
     version = version .. "-alpha(" .. os.time () .. ")"
 end
 
-plume = plume:gsub('\n%-%- <TO REMOVE.-%-%- >\n', '')
+plume = plume:gsub('\n%-%- <TO REMOVE.-%-%- TO REMOVE>\n', '')
 plume = plume:gsub('#VERSION', version)
 plume = plume:gsub('include \'(%w+)\'', function(m)
     return io.open(m .. '.lua'):read '*a':gsub('^.-%]%]', '')

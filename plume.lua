@@ -52,9 +52,10 @@ local function include (name)
     setfenv (script, env)
     script ()
 end
--- >
+-- TO REMOVE>
 
 include 'utils'
+
 Plume.transpiler = {}
 include 'patterns'
 include 'transpile'
