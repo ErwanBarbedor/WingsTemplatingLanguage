@@ -14,12 +14,23 @@ You should have received a copy of the GNU General Public License along with Lua
 
 print("Creating plume.lua...")
 -- Merge all plume code into a single standalone file
-local plume = io.open 'plume.lua':read '*a'
+local plume   = io.open 'plume.lua':read '*a'
+local version = 'v1.0.#BUILD-alpha'
+local build   = 7
 
 plume = plume:gsub('\n%-%- <TO REMOVE.-%-%- >\n', '')
+plume = plume:gsub('#VERSION', version:gsub('#BUILD', build))
 plume = plume:gsub('include \'(%w+)\'', function(m)
     return io.open(m .. '.lua'):read '*a':gsub('^.-%]%]', '')
 end)
 
 io.open('dist/plume.lua', 'w'):write(plume)
 print("Done with sucess")
+
+-- incremente build number
+local f = io.open('build.lua')
+local code = f:read('*a'):gsub('local build   = 7', 'local build   = ' .. (build+1))
+f:close ()
+local f = io.open('build.lua', 'w')
+f:write(code)
+f:close()
