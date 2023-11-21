@@ -14,9 +14,10 @@ You should have received a copy of the GNU General Public License along with Lua
 
 print("Creating plume.lua...")
 -- Merge all plume code into a single standalone file
-local plume = io.open 'main.lua':read '*a'
+local plume = io.open 'plume.lua':read '*a'
 
-plume = plume:gsub('%-%- #INCLUDE : (%w+)', function(m)
+plume = plume:gsub('\n%-%- <TO REMOVE.-%-%- >\n', '')
+plume = plume:gsub('include \'(%w+)\'', function(m)
     return io.open(m .. '.lua'):read '*a':gsub('^.-%]%]', '')
 end)
 
