@@ -99,9 +99,12 @@ local function print_diff (a, b)
     io.write '\27[0m\n'
 end
 
-package.path = package.path .. ";../?.lua"
+local testdir  = arg[1]
+local plumedir = arg[1]:gsub('[^/]*$', '')
+package.path = package.path .. ";"..plumedir.."?.lua"..";"..testdir.."/?.lua"
+
 local Plume = require "plume"
-local tests = io.open('test.plume'):read'*a'
+local tests = io.open(arg[1]..'/test.plume'):read'*a'
 
 local n_test   = 0
 local n_sucess = 0

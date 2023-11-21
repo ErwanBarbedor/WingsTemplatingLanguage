@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+versions=(51 52 53 54 jit)
+
+echo "Passing plume test for all lua version."
+
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+for v in "${versions[@]}"
+do
+    printf "\tlua%s : " "$v"
+    eval "lua$v  $script_dir/test.lua $script_dir"
+done
