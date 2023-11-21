@@ -713,8 +713,13 @@ function Plume:Token (x)
     setmetatable(tk, mtk)
     return tk
 end
+Plume.std = {}
 
-function Plume:include(name)
+
+-- All std functions will be included in plume.env at 
+-- plume instance creation.
+
+function Plume.std.include(plume, name)
     -- This function work like require :
     -- Search for a file named 'name.plume' and 'execute it'
     -- In the context of plume, the file will be rendered and added to the output
@@ -725,7 +730,7 @@ function Plume:include(name)
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
 
-    for path in self.path:gmatch('[^;]+') do
+    for path in plume.path:gmatch('[^;]+') do
         local path = path:gsub('?', name)
         file = io.open(path)
         if file then
@@ -740,7 +745,7 @@ function Plume:include(name)
     end
 
     local plumecode = file:read "*a"
-    local result    = self:render(plumecode)
+    local result    = plume:render(plumecode)
     
     return result
 end
@@ -754,8 +759,7 @@ function Plume:new ()
 
     -- Create a new environment
     plume.env = {
-        plume=plume,
-        include=function (...) return plume:include (...) end,
+        plume=plume
     }
 
     -- Inherit from package.path
@@ -771,6 +775,7 @@ function Plume:new ()
 
     plume.transpiler:compile_patterns ()
 
+    -- Populate plume.env with lua and plume defaut functions
     local version
     if jit then
         version = "jit"
@@ -778,9 +783,12 @@ function Plume:new ()
         version = _VERSION:match('[0-9]%.[0-9]$')
     end
 
-    -- Populate plume.env with lua defaut functions
     for name in LUA_STD[version]:gmatch('%S+') do
         plume.env[name] = _G[name]
+    end
+
+    for name, f in pairs(Plume.std) do
+        plume.env[name] = function (...) return f (plume, ...) end
     end
 
     return plume

@@ -60,6 +60,7 @@ include 'patterns'
 include 'transpile'
 include 'engine'
 include 'token'
+Plume.std = {}
 include 'std'
 
 
@@ -71,8 +72,7 @@ function Plume:new ()
 
     -- Create a new environment
     plume.env = {
-        plume=plume,
-        include=function (...) return plume:include (...) end,
+        plume=plume
     }
 
     -- Inherit from package.path
@@ -88,6 +88,7 @@ function Plume:new ()
 
     plume.transpiler:compile_patterns ()
 
+    -- Populate plume.env with lua and plume defaut functions
     local version
     if jit then
         version = "jit"
@@ -95,9 +96,12 @@ function Plume:new ()
         version = _VERSION:match('[0-9]%.[0-9]$')
     end
 
-    -- Populate plume.env with lua defaut functions
     for name in LUA_STD[version]:gmatch('%S+') do
         plume.env[name] = _G[name]
+    end
+
+    for name, f in pairs(Plume.std) do
+        plume.env[name] = function (...) return f (plume, ...) end
     end
 
     return plume

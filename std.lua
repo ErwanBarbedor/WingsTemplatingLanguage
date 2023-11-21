@@ -11,7 +11,11 @@ See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
 ]]
-function Plume:include(name)
+
+-- All std functions will be included in plume.env at 
+-- plume instance creation.
+
+function Plume.std.include(plume, name)
     -- This function work like require :
     -- Search for a file named 'name.plume' and 'execute it'
     -- In the context of plume, the file will be rendered and added to the output
@@ -22,7 +26,7 @@ function Plume:include(name)
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
 
-    for path in self.path:gmatch('[^;]+') do
+    for path in plume.path:gmatch('[^;]+') do
         local path = path:gsub('?', name)
         file = io.open(path)
         if file then
@@ -37,7 +41,7 @@ function Plume:include(name)
     end
 
     local plumecode = file:read "*a"
-    local result    = self:render(plumecode)
+    local result    = plume:render(plumecode)
     
     return result
 end
