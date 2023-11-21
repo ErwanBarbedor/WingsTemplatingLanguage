@@ -40,28 +40,14 @@ local LUA_STD = {
     jit="_VERSION arg assert bit collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall"
 }
 
--- <TO REMOVE
--- Utils function to split main file in chunck.
--- Only for developement purpose, will not be part of the final file.
-local function include (name)
-    local env = setmetatable({Plume=Plume}, {__index=_G})
-    local script, err = loadfile (debug.getinfo(2, "S").source:sub(2):gsub('[^\\/]*$', '') .. name..'.lua', "t", env)
-    if not script then
-        error('Include file "' .. name .. '" : \n' .. err)
-    end
-    setfenv (script, env)
-    script ()
-end
--- >
-
-include 'utils'
+-- #INCLUDE : utils
 Plume.transpiler = {}
-include 'patterns'
-include 'transpile'
-include 'engine'
-include 'token'
+-- #INCLUDE : patterns
+-- #INCLUDE : transpile
+-- #INCLUDE : engine
+-- #INCLUDE : token
 Plume.std = {}
-include 'std'
+-- #INCLUDE : std
 
 
 function Plume:new ()
