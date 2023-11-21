@@ -12,6 +12,7 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+print("Creating plume.lua...")
 -- Merge all plume code into a single standalone file
 local plume = io.open 'plume.lua':read '*a'
 
@@ -21,3 +22,4 @@ plume = plume:gsub('include \'(%w+)\'', function(m)
 end)
 
 io.open('dist/plume.lua', 'w'):write(plume)
+print("Done with sucess")
