@@ -24,3 +24,18 @@ function Plume.utils.copy (t)
     end
     return nt
 end
+
+function Plume.utils.load (s, name, env)
+    -- Load string in a specified env
+    -- Working for all lua versions
+    if not setfenv  then
+        return load (s, name, "t", env)
+    end
+    
+    local f, err = loadstring(s)
+    if f and env then
+        setfenv(f, env)
+    end
+
+    return f, err
+end

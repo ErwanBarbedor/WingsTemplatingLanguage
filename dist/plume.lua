@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha(1700683562)
+LuaPlume v1.0.0-alpha(1700685030)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,10 +20,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha(1700683562)"
+Plume._VERSION = "v1.0.0-alpha(1700685030)"
 
 -- Lua 5.1 compatibility
-local setfenv = setfenv or function () end
+-- local setfenv = setfenv or function () end
 
 -- Predefined list of standard Lua variables/functions for various versions
 -- These are intended to be provided as a part of sandbox environments to execute user code safely
@@ -48,7 +48,9 @@ local function include (name)
     if not script then
         error('Include file "' .. name .. '" : \n' .. err)
     end
-    setfenv (script, env)
+    if setfenv then
+        setfenv (script, env)
+    end
     script ()
 end
 -- TO REMOVE>
@@ -66,6 +68,21 @@ function Plume.utils.copy (t)
         end
     end
     return nt
+end
+
+function Plume.utils.load (s, name, env)
+    -- Load string in a specified env
+    -- Working for all lua versions
+    if not setfenv  then
+        return load (s, name, "t", env)
+    end
+    
+    local f, err = loadstring(s)
+    if f and env then
+        setfenv(f, env)
+    end
+
+    return f, err
 end
 
 Plume.transpiler = {}
@@ -874,15 +891,10 @@ function Plume:render(code)
 
     local luacode = self.transpiler:transpile (code)
 
-    -- Compatibily for lua 5.1
-    -- parameters are only for lua>5.2
-    local f, err = (loadstring or load) (luacode, "plumecode", 't', self.env)
+    local f, err = self.utils.load (luacode, "plumecode",  self.env)
     if not f then
         error(err)
     end
-
-    -- Compatibily for lua 5.1
-    setfenv (f, self.env)
 
     local sucess, result = pcall(f)
     if not sucess then

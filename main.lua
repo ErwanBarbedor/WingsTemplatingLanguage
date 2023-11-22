@@ -23,7 +23,7 @@ local Plume = {}
 Plume._VERSION = "#VERSION"
 
 -- Lua 5.1 compatibility
-local setfenv = setfenv or function () end
+-- local setfenv = setfenv or function () end
 
 -- Predefined list of standard Lua variables/functions for various versions
 -- These are intended to be provided as a part of sandbox environments to execute user code safely
@@ -48,7 +48,9 @@ local function include (name)
     if not script then
         error('Include file "' .. name .. '" : \n' .. err)
     end
-    setfenv (script, env)
+    if setfenv then
+        setfenv (script, env)
+    end
     script ()
 end
 -- TO REMOVE>
@@ -112,15 +114,10 @@ function Plume:render(code)
 
     local luacode = self.transpiler:transpile (code)
 
-    -- Compatibily for lua 5.1
-    -- parameters are only for lua>5.2
-    local f, err = (loadstring or load) (luacode, "plumecode", 't', self.env)
+    local f, err = self.utils.load (luacode, "plumecode",  self.env)
     if not f then
         error(err)
     end
-
-    -- Compatibily for lua 5.1
-    setfenv (f, self.env)
 
     local sucess, result = pcall(f)
     if not sucess then
