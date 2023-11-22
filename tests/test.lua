@@ -99,61 +99,87 @@ local function print_diff (a, b)
     io.write '\27[0m\n'
 end
 
-local testdir  = arg[1]
-local plumedir = arg[1]:gsub('[^/]*$', '')
-package.path = package.path .. ";"..plumedir.."?.lua"..";"..testdir.."/?.lua"
+local function test(plume_path, test_path, simplelog, fullog)
+    -- local testdir  = arg[1]
+    -- local plumedir = arg[1]:gsub('[^/]*$', '')
+    local testdir  = test_path :gsub('[^/]*$', '')
+    local plumedir = plume_path:gsub('[^/]*$', '')
+    package.path = package.path .. ";"..plumedir.."?.lua"..";"..testdir.."/?.lua"
 
-local Plume = require "plume"
-local tests = io.open(arg[1]..'/test.plume'):read'*a'
+    local Plume = require "plume"
+    local tests = io.open(test_path):read'*a'
 
-local n_test   = 0
-local n_sucess = 0
+    local n_test   = 0
+    local n_sucess = 0
 
+    local log = simplelog or fullog
 
-local show_error = (arg[1] == "show") or true
+    for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
+        local plumecode = {}
+        local result    = {}
+        local name = test:match ('#%-%- TEST : ([^\n]*)')
+        test = test:gsub('#%-%- TEST : [^\n]*\n', ''):gsub('#%-%- END', '')
 
-for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
-    local plumecode = {}
-    local result    = {}
-    local name = test:match ('#%-%- TEST : ([^\n]*)')
-    test = test:gsub('#%-%- TEST : [^\n]*\n', ''):gsub('#%-%- END', '')
+        local in_code = true
 
-    local in_code = true
+        for line in test:gmatch('[^\n]*\n?') do
+            if line == '#-- RESULT\n' then
+                in_code = false
+            elseif in_code then
+                table.insert(plumecode, line)
+            else
+                table.insert(result, line)
+            end
+        end
 
-    for line in test:gmatch('[^\n]*\n?') do
-        if line == '#-- RESULT\n' then
-            in_code = false
-        elseif in_code then
-            table.insert(plumecode, line)
+        plumecode = table.concat(plumecode, "")
+        result    = table.concat(result, "")
+
+        local plume = Plume:new ()
+        local sucess, output  = pcall(plume.render, plume, plumecode)
+        local soutput
+        if sucess then
+            soutput = output:tostring()
+        end
+
+        n_test = n_test + 1
+        if not sucess then
+            if fullog then
+                print('Test ' .. name .. ' failed with error:' .. output)
+            end
+        elseif soutput ~= result then
+            if fullog then
+                print('Test ' .. name .. ' failed :')
+                print_diff (result, soutput)
+                print('[[' .. soutput .. ']]')
+            end
         else
-            table.insert(result, line)
+            n_sucess = n_sucess + 1
         end
     end
 
-    plumecode = table.concat(plumecode, "")
-    result    = table.concat(result, "")
-
-    local plume = Plume:new ()
-    local sucess, output  = pcall(plume.render, plume, plumecode)
-    local soutput
-    if sucess then
-        soutput = output:tostring()
+    if log then
+        print(n_sucess .. '/' .. n_test .. ' tests passed.')
     end
 
-    n_test = n_test + 1
-    if not sucess then
-        if show_error then
-            print('Test ' .. name .. ' failed with error:' .. output)
-        end
-    elseif soutput ~= result then
-        if show_error then
-            print('Test ' .. name .. ' failed :')
-            print_diff (result, soutput)
-            print('[[' .. soutput .. ']]')
-        end
-    else
-        n_sucess = n_sucess + 1
-    end
+    return n_sucess == n_test
 end
 
-print(n_sucess .. '/' .. n_test .. ' tests passed.')
+local optns = {}
+
+local i = 1
+while i <= #arg do
+
+    if arg[i] == '--plume' or arg[i] == '--test' then
+        optns[arg[i]:sub(3, -1)] = arg[i+1]
+        i = i+1
+    else
+        optns[arg[i]:sub(3, -1)] = true
+    end
+
+    i = i + 1
+end
+
+if optns.run then
+    test (optns.plume, optns.test, optns.log, optns.fullog)
+end

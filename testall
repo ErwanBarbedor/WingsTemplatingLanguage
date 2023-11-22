@@ -9,5 +9,5 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 for v in "${versions[@]}"
 do
     printf "\tlua%s : " "$v"
-    eval "lua$v  $script_dir/test.lua $script_dir"
+    eval "lua$v $script_dir/tests/test.lua --run --fullog --plume $script_dir/plume --test $script_dir/tests/test.plume"
 done

@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha(1700606783)
+LuaPlume v1.0.0-alpha(1700679035)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha(1700606783)"
+Plume._VERSION = "v1.0.0-alpha(1700679035)"
 
 -- Lua 5.1 compatibility
 local setfenv = setfenv or function () end
@@ -39,6 +39,20 @@ local LUA_STD = {
 
     jit="_VERSION arg assert bit collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall"
 }
+
+-- <TO REMOVE
+-- Utils function to split main file in chunck.
+-- Only for developement purpose, will not be part of the final file.
+local function include (name)
+    local env = setmetatable({Plume=Plume}, {__index=_G})
+    local script, err = loadfile (debug.getinfo(2, "S").source:sub(2):gsub('[^\\/]*$', '') .. name..'.lua', "t", env)
+    if not script then
+        error('Include file "' .. name .. '" : \n' .. err)
+    end
+    setfenv (script, env)
+    script ()
+end
+-- TO REMOVE>
 
 
 Plume.utils = {}
