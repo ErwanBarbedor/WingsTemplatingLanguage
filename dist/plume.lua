@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha(1700679035)
+LuaPlume v1.0.0-alpha(1700683562)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -18,10 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha(1700679035)"
+Plume._VERSION = "v1.0.0-alpha(1700683562)"
 
 -- Lua 5.1 compatibility
 local setfenv = setfenv or function () end

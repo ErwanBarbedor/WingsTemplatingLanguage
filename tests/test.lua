@@ -102,11 +102,12 @@ end
 local function test(plume_path, test_path, simplelog, fullog)
     -- local testdir  = arg[1]
     -- local plumedir = arg[1]:gsub('[^/]*$', '')
-    local testdir  = test_path :gsub('[^/]*$', '')
-    local plumedir = plume_path:gsub('[^/]*$', '')
+    local testdir   = test_path :gsub('[^/]*$', '')
+    local plumedir  = plume_path:gsub('[^/]*$', '')
+    local plumename = plume_path:match('[^/]*$')
     package.path = package.path .. ";"..plumedir.."?.lua"..";"..testdir.."/?.lua"
 
-    local Plume = require "plume"
+    local Plume = require (plumename)
     local tests = io.open(test_path):read'*a'
 
     local n_test   = 0

@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License along with Lua
 
 print("Creating plume.lua...")
 -- Merge all plume code into a single standalone file
-local plume   = io.open 'plume.lua':read '*a'
+local plume   = io.open 'main.lua':read '*a'
 local version = 'v1.0.0'
 local alpha   = true
 
