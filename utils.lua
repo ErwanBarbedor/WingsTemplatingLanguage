@@ -32,7 +32,7 @@ function Plume.utils.load (s, name, env)
         return load (s, name, "t", env)
     end
     
-    local f, err = loadstring(s)
+    local f, err = loadstring(s, name)
     if f and env then
         setfenv(f, env)
     end
@@ -40,8 +40,32 @@ function Plume.utils.load (s, name, env)
     return f, err
 end
 
+function Plume.utils.friendly_error (code, err)
+    local name = err:match('^[^:]*')
+    err = err:sub(#name+2, -1)
+    local noline_lua = err:match('^[^:]*')
+    err = err:sub(#noline_lua+2, -1)
+    noline_lua = tonumber (noline_lua)
+    
+    local error_line     = ""
+    local noline_plume   = 0
+    local noline_current = 0
+    for line in code:gmatch('[^\n]*\n?') do
+        noline_current = noline_current + 1
+
+        if line:match '^%s*%-%- line [0-9]+ : ' then
+            noline_plume, error_line = line:match '^%s*%-%- line ([0-9]+) : ([^\n]*)'
+        end
+
+        if noline_current >= noline_lua then
+            break
+        end
+    end
+
+    error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
+end
+
 -- Predefined list of standard Lua variables/functions for various versions
--- These are intended to be provided as a part of sandbox environments to execute user code safely
 Plume.utils.LUA_STD_FUNCTION = {
     ["5.1"]="_VERSION arg assert collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall",
 

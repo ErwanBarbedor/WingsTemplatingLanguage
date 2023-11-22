@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha(1700685457)
+LuaPlume v1.0.0-alpha(1700696622)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha(1700685457)"
+Plume._VERSION = "v1.0.0-alpha(1700696622)"
 
 
 Plume.utils = {}
@@ -44,7 +44,7 @@ function Plume.utils.load (s, name, env)
         return load (s, name, "t", env)
     end
     
-    local f, err = loadstring(s)
+    local f, err = loadstring(s, name)
     if f and env then
         setfenv(f, env)
     end
@@ -52,8 +52,32 @@ function Plume.utils.load (s, name, env)
     return f, err
 end
 
+function Plume.utils.friendly_error (code, err)
+    local name = err:match('^[^:]*')
+    err = err:sub(#name+2, -1)
+    local noline_lua = err:match('^[^:]*')
+    err = err:sub(#noline_lua+2, -1)
+    noline_lua = tonumber (noline_lua)
+    
+    local error_line     = ""
+    local noline_plume   = 0
+    local noline_current = 0
+    for line in code:gmatch('[^\n]*\n?') do
+        noline_current = noline_current + 1
+
+        if line:match '^%s*%-%- line [0-9]+ : ' then
+            noline_plume, error_line = line:match '^%s*%-%- line ([0-9]+) : ([^\n]*)'
+        end
+
+        if noline_current >= noline_lua then
+            break
+        end
+    end
+
+    error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
+end
+
 -- Predefined list of standard Lua variables/functions for various versions
--- These are intended to be provided as a part of sandbox environments to execute user code safely
 Plume.utils.LUA_STD_FUNCTION = {
     ["5.1"]="_VERSION arg assert collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall",
 
@@ -194,7 +218,7 @@ function Plume.transpiler:transpile (code)
                 self.line = "\n" .. self.indent .. self.line
             end
             local firstindent = self.line:match('\n%s*')
-            self.line = firstindent .. "-- self.line " .. self.noline .. ' : ' .. rawline:gsub('^\t*', ''):gsub('\n', '') .. self.line .. '\n'
+            self.line = firstindent .. "-- line " .. self.noline .. ' : ' .. rawline:gsub('^\t*', ''):gsub('\n', '') .. self.line .. '\n'
         end
 
         table.insert(self.chuncks, self.line)
@@ -264,7 +288,7 @@ function Plume.transpiler:decrement_indent ()
     self.indent = self.indent:gsub(self.patterns.indent .. '$', '')
 end
 
--- All 'write' functions don't modify the self.line 
+-- All 'write' functions don't modify the line 
 function Plume.transpiler:write_text (s)
     -- Handle text that may be added to the output by Plume
     if #s > 0 then
@@ -459,12 +483,12 @@ function Plume.transpiler:handle_plume_code (command)
     -- We are inside Plume code and no call to manage.
     -- Manage each of allowed keyword and macro/function call
     if command == "lua" then
-        -- Open raw lua code self.chunck
+        -- Open raw lua code chunck
         table.insert(self.stack, {lua=true, name="lua"})
         self:write_lua ('\n' .. self.indent .. '-- Begin raw lua code\n', true)
 
     elseif command == "function" then
-        -- Declare a new function and open a lua code self.chunck
+        -- Declare a new function and open a lua code chunck
         local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
         self.line = self.line:sub((#space+#name)+1, -1)
         local args = self.line:match('%b()')
@@ -500,7 +524,7 @@ function Plume.transpiler:handle_plume_code (command)
         table.insert(self.stack, {name="macro", args=args_info, fname=name})
         
     elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
-        -- Open a lua self.chunck for iterator / condition
+        -- Open a lua chunck for iterator / condition
         table.insert(self.stack, {lua=true, name=command})
         self:write_lua ('\n'.. self.indent..command)
 
@@ -867,19 +891,19 @@ function Plume:new ()
     return plume
 end
 
-function Plume:render(code)
+function Plume:render(code, name)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
 
-    local f, err = self.utils.load (luacode, "plumecode",  self.env)
+    local f, err = self.utils.load (luacode, "@" .. (name or "main") .. ".plume",  self.env)
     if not f then
         error(err)
     end
 
     local sucess, result = pcall(f)
     if not sucess then
-        error(result)
+        self.utils.friendly_error (luacode, result)
     end
 
     result.luacode = luacode

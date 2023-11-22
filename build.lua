@@ -19,7 +19,7 @@ local version = 'v1.0.0'
 local alpha   = true
 
 if alpha then
-    version = version .. "-alpha(" .. os.time () .. ")"
+    version = version .. "-alpha-" .. os.time ()
 end
 
 plume = plume:gsub('\n%-%- <TO REMOVE.-%-%- TO REMOVE>\n', '')

@@ -92,19 +92,19 @@ function Plume:new ()
     return plume
 end
 
-function Plume:render(code)
+function Plume:render(code, name)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
 
-    local f, err = self.utils.load (luacode, "plumecode",  self.env)
+    local f, err = self.utils.load (luacode, "@" .. (name or "main") .. ".plume",  self.env)
     if not f then
         error(err)
     end
 
     local sucess, result = pcall(f)
     if not sucess then
-        error(result)
+        self.utils.friendly_error (luacode, result)
     end
 
     result.luacode = luacode
