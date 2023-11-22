@@ -22,23 +22,6 @@ local Plume = {}
 
 Plume._VERSION = "#VERSION"
 
--- Lua 5.1 compatibility
--- local setfenv = setfenv or function () end
-
--- Predefined list of standard Lua variables/functions for various versions
--- These are intended to be provided as a part of sandbox environments to execute user code safely
-local LUA_STD = {
-    ["5.1"]="_VERSION arg assert collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall",
-
-    ["5.2"]="_VERSION arg assert bit32 collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile loadstring math module next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type unpack xpcall xpcall",
-
-    ["5.3"]="_VERSION arg assert bit32 collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 xpcall",
-
-    ["5.4"]="_VERSION arg assert collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 warn xpcall",
-
-    jit="_VERSION arg assert bit collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall"
-}
-
 -- <TO REMOVE
 -- Utils function to split main file in chunck.
 -- Only for developement purpose, will not be part of the final file.
@@ -98,7 +81,7 @@ function Plume:new ()
         version = _VERSION:match('[0-9]%.[0-9]$')
     end
 
-    for name in LUA_STD[version]:gmatch('%S+') do
+    for name in Plume.utils.LUA_STD_FUNCTION[version]:gmatch('%S+') do
         plume.env[name] = _G[name]
     end
 
