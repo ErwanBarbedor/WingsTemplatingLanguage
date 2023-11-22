@@ -90,7 +90,7 @@ function Plume.transpiler:transpile (code)
                 self.line = "\n" .. self.indent .. self.line
             end
             local firstindent = self.line:match('\n%s*')
-            self.line = firstindent .. "-- self.line " .. self.noline .. ' : ' .. rawline:gsub('^\t*', ''):gsub('\n', '') .. self.line .. '\n'
+            self.line = firstindent .. "-- line " .. self.noline .. ' : ' .. rawline:gsub('^\t*', ''):gsub('\n', '') .. self.line .. '\n'
         end
 
         table.insert(self.chuncks, self.line)
@@ -160,7 +160,7 @@ function Plume.transpiler:decrement_indent ()
     self.indent = self.indent:gsub(self.patterns.indent .. '$', '')
 end
 
--- All 'write' functions don't modify the self.line 
+-- All 'write' functions don't modify the line 
 function Plume.transpiler:write_text (s)
     -- Handle text that may be added to the output by Plume
     if #s > 0 then
@@ -355,12 +355,12 @@ function Plume.transpiler:handle_plume_code (command)
     -- We are inside Plume code and no call to manage.
     -- Manage each of allowed keyword and macro/function call
     if command == "lua" then
-        -- Open raw lua code self.chunck
+        -- Open raw lua code chunck
         table.insert(self.stack, {lua=true, name="lua"})
         self:write_lua ('\n' .. self.indent .. '-- Begin raw lua code\n', true)
 
     elseif command == "function" then
-        -- Declare a new function and open a lua code self.chunck
+        -- Declare a new function and open a lua code chunck
         local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
         self.line = self.line:sub((#space+#name)+1, -1)
         local args = self.line:match('%b()')
@@ -396,7 +396,7 @@ function Plume.transpiler:handle_plume_code (command)
         table.insert(self.stack, {name="macro", args=args_info, fname=name})
         
     elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
-        -- Open a lua self.chunck for iterator / condition
+        -- Open a lua chunck for iterator / condition
         table.insert(self.stack, {lua=true, name=command})
         self:write_lua ('\n'.. self.indent..command)
 
