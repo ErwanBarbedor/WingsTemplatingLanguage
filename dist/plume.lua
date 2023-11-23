@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha(1700696622)
+LuaPlume v1.0.0-alpha-1700748838
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha(1700696622)"
+Plume._VERSION = "v1.0.0-alpha-1700748838"
 
 
 Plume.utils = {}
@@ -503,7 +503,7 @@ function Plume.transpiler:handle_plume_code (command)
         self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' ' .. args_name)
         self:increment_indent ()
 
-        table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name})
+        table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name, line=self.noline})
 
     elseif command == "macro" then
         -- Declare a new function
@@ -521,7 +521,7 @@ function Plume.transpiler:handle_plume_code (command)
         self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' ' .. args_name)
         self:increment_indent ()
         self:write_lua ('\n' .. self.indent .. 'plume:push()')
-        table.insert(self.stack, {name="macro", args=args_info, fname=name})
+        table.insert(self.stack, {name="macro", args=args_info, fname=name, line=self.noline})
         
     elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
         -- Open a lua chunck for iterator / condition
@@ -552,6 +552,8 @@ function Plume.transpiler:handle_plume_code (command)
         if self.top.name == 'macro' then
             self:write_lua ('\n' .. self.indent .. 
                 'plume.function_args[' .. self.top.fname .. '] = ' .. self.top.args)
+             self:write_lua ('\n' .. self.indent .. 
+                'plume.function_line[' .. self.top.fname .. '] = ' .. self.top.line)
         end
 
     elseif command == self.patterns.open_call then
@@ -865,8 +867,9 @@ function Plume:new ()
     -- Stack used for managing nested constructs in the templating language
     plume.stack = {}
 
-    -- Weak table holding function argument information
+    -- Weak tables holding function argument information
     plume.function_args = setmetatable({}, {__mode="k"})
+    plume.function_line = setmetatable({}, {__mode="k"})
 
     plume.type = "plume"
 
