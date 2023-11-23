@@ -66,10 +66,6 @@ function Plume:new ()
     -- Stack used for managing nested constructs in the templating language
     plume.stack = {}
 
-    -- Weak tables holding function argument information
-    plume.function_args = setmetatable({}, {__mode="k"})
-    plume.function_line = setmetatable({}, {__mode="k"})
-
     plume.type = "plume"
 
     plume.transpiler:compile_patterns ()

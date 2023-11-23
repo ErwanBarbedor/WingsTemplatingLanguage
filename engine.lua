@@ -27,7 +27,7 @@ function Plume:write (x)
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
     elseif type(x) == 'function' then
-        return self:call(x)
+       self:write(x())
     end
 end
 
@@ -44,11 +44,14 @@ function Plume:pop ()
     return table.remove(self.stack)
 end
 
-function Plume:call (f, given_args)
-    -- Handles positional and named arguments, but only for functions declared inside Plume.
-    -- If not, all named arguments will be ignored.
-    local given_args = given_args or {}
+function Plume:make_args_list (given_args, info)
+    -- From a call with mixed positional and named arguments,
+    -- make a lua-valid argument list.
+    -- If not "info", return the positional args
 
+    local given_args = given_args or {}
+    
+    -- sort positional/named
     local positional_args = {}
     local named_args = {}
 
@@ -62,14 +65,8 @@ function Plume:call (f, given_args)
         end
     end
 
-    local info = self.function_args[f]
-
     if not info then
-        self:write(
-
-            f( (unpack or table.unpack) (positional_args) )
-        )
-        return
+        return (unpack or table.unpack) (positional_args)
     end
 
     local args = {}
@@ -111,8 +108,5 @@ function Plume:call (f, given_args)
         end
     end
 
-    self:write(
-        -- Compatibily for lua 5.1
-        f( (unpack or table.unpack) (args, 1, #info) )
-    )
+    return (unpack or table.unpack) (args, 1, #info)
 end

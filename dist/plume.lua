@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1700750135
+LuaPlume v1.0.0-alpha-1700774383
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha-1700750135"
+Plume._VERSION = "v1.0.0-alpha-1700774383"
 
 
 Plume.utils = {}
@@ -318,9 +318,9 @@ end
 
 -- Manage function call
 function Plume.transpiler:write_functioncall_begin (s)
-    -- write the begin of a function call : 'plume:call', give the function name,
+    -- write the begin of a function call : give the function name,
     -- open a table brace for containing incomings arguments.
-    table.insert(self.chunck, '\n' .. self.indent .. 'plume:call(' .. s .. ', {')
+    table.insert(self.chunck, '\n' .. self.indent .. 'plume:write(' .. s .. ' {')
     self:increment_indent ()
 end
 
@@ -459,9 +459,6 @@ function Plume.transpiler:handle_lua_code (command)
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
 
-        self:write_lua ('\n' .. self.indent .. 
-                'plume.function_args[' .. self.top.fname .. '] = ' .. self.top.args)
-
     elseif command == "do" and (self.top.name == "for" or self.top.name == "while") then
         table.remove(self.stack)
         table.insert(self.stack, {name="for"})
@@ -546,8 +543,22 @@ function Plume.transpiler:handle_new_function (ismacro)
 
     local args_name, args_info = self:extract_args (args)
 
-    self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' ' .. args_name)
+    self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' (args)')
     self:increment_indent ()
+
+    -- Support positional args
+    if args_name:match('^%(%s*%)$') then
+        self:write_lua ('\n' .. self.indent .. 'args = nil')
+    else
+        -- Dont polluate environnement with a new variable "args"
+        self:write_lua ('\n' .. self.indent .. 'plume._args = args')
+        self:write_lua ('\n' .. self.indent .. 'args = nil')
+
+        self:write_lua ('\n' .. self.indent
+                        .. 'local ' .. args_name:sub(2, -2)
+                        .. ' = plume:make_args_list (plume._args, ' .. args_info ..')')
+        self:write_lua ('\n' .. self.indent .. 'plume._args = nil')
+    end
 
     if ismacro then
         self:write_lua ('\n' .. self.indent .. 'plume:push()')
@@ -570,14 +581,6 @@ function Plume.transpiler:handle_end_keyword ()
     else
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
-    end
-
-    -- Write function informations
-    if self.top.name == 'macro' then
-        self:write_lua ('\n' .. self.indent .. 
-            'plume.function_args[' .. self.top.fname .. '] = ' .. self.top.args)
-        self:write_lua ('\n' .. self.indent .. 
-            'plume.function_line[' .. self.top.fname .. '] = ' .. self.top.line)
     end
 end
 
@@ -636,7 +639,7 @@ function Plume:write (x)
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
     elseif type(x) == 'function' then
-        return self:call(x)
+       self:write(x())
     end
 end
 
@@ -653,11 +656,14 @@ function Plume:pop ()
     return table.remove(self.stack)
 end
 
-function Plume:call (f, given_args)
-    -- Handles positional and named arguments, but only for functions declared inside Plume.
-    -- If not, all named arguments will be ignored.
-    local given_args = given_args or {}
+function Plume:make_args_list (given_args, info)
+    -- From a call with mixed positional and named arguments,
+    -- make a lua-valid argument list.
+    -- If not "info", return the positional args
 
+    local given_args = given_args or {}
+    
+    -- sort positional/named
     local positional_args = {}
     local named_args = {}
 
@@ -671,14 +677,8 @@ function Plume:call (f, given_args)
         end
     end
 
-    local info = self.function_args[f]
-
     if not info then
-        self:write(
-
-            f( (unpack or table.unpack) (positional_args) )
-        )
-        return
+        return (unpack or table.unpack) (positional_args)
     end
 
     local args = {}
@@ -720,10 +720,7 @@ function Plume:call (f, given_args)
         end
     end
 
-    self:write(
-        -- Compatibily for lua 5.1
-        f( (unpack or table.unpack) (args, 1, #info) )
-    )
+    return (unpack or table.unpack) (args, 1, #info)
 end
 
 function Plume:TokenList ()
@@ -819,13 +816,15 @@ Plume.std = {}
 -- All std functions will be included in plume.env at 
 -- plume instance creation.
 
-function Plume.std.include(plume, name)
+function Plume.std.include(plume, args)
     -- This function work like require :
     -- Search for a file named 'name.plume' and 'execute it'
     -- In the context of plume, the file will be rendered and added to the output
     -- Unlike require, result will not be cached
     local failed_path = {}
     local file
+
+    local name = plume:make_args_list(args)
 
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
@@ -867,10 +866,6 @@ function Plume:new ()
 
     -- Stack used for managing nested constructs in the templating language
     plume.stack = {}
-
-    -- Weak tables holding function argument information
-    plume.function_args = setmetatable({}, {__mode="k"})
-    plume.function_line = setmetatable({}, {__mode="k"})
 
     plume.type = "plume"
 

@@ -15,13 +15,15 @@ You should have received a copy of the GNU General Public License along with Lua
 -- All std functions will be included in plume.env at 
 -- plume instance creation.
 
-function Plume.std.include(plume, name)
+function Plume.std.include(plume, args)
     -- This function work like require :
     -- Search for a file named 'name.plume' and 'execute it'
     -- In the context of plume, the file will be rendered and added to the output
     -- Unlike require, result will not be cached
     local failed_path = {}
     local file
+
+    local name = plume:make_args_list(args)
 
     -- name is a TokenList, so we need to convert it
     name = name:tostring()

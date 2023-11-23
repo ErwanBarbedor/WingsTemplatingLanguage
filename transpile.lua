@@ -190,9 +190,9 @@ end
 
 -- Manage function call
 function Plume.transpiler:write_functioncall_begin (s)
-    -- write the begin of a function call : 'plume:call', give the function name,
+    -- write the begin of a function call : give the function name,
     -- open a table brace for containing incomings arguments.
-    table.insert(self.chunck, '\n' .. self.indent .. 'plume:call(' .. s .. ', {')
+    table.insert(self.chunck, '\n' .. self.indent .. 'plume:write(' .. s .. ' {')
     self:increment_indent ()
 end
 
@@ -331,9 +331,6 @@ function Plume.transpiler:handle_lua_code (command)
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
 
-        self:write_lua ('\n' .. self.indent .. 
-                'plume.function_args[' .. self.top.fname .. '] = ' .. self.top.args)
-
     elseif command == "do" and (self.top.name == "for" or self.top.name == "while") then
         table.remove(self.stack)
         table.insert(self.stack, {name="for"})
@@ -418,8 +415,22 @@ function Plume.transpiler:handle_new_function (ismacro)
 
     local args_name, args_info = self:extract_args (args)
 
-    self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' ' .. args_name)
+    self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' (args)')
     self:increment_indent ()
+
+    -- Support positional args
+    if args_name:match('^%(%s*%)$') then
+        self:write_lua ('\n' .. self.indent .. 'args = nil')
+    else
+        -- Dont polluate environnement with a new variable "args"
+        self:write_lua ('\n' .. self.indent .. 'plume._args = args')
+        self:write_lua ('\n' .. self.indent .. 'args = nil')
+
+        self:write_lua ('\n' .. self.indent
+                        .. 'local ' .. args_name:sub(2, -2)
+                        .. ' = plume:make_args_list (plume._args, ' .. args_info ..')')
+        self:write_lua ('\n' .. self.indent .. 'plume._args = nil')
+    end
 
     if ismacro then
         self:write_lua ('\n' .. self.indent .. 'plume:push()')
@@ -442,14 +453,6 @@ function Plume.transpiler:handle_end_keyword ()
     else
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
-    end
-
-    -- Write function informations
-    if self.top.name == 'macro' then
-        self:write_lua ('\n' .. self.indent .. 
-            'plume.function_args[' .. self.top.fname .. '] = ' .. self.top.args)
-        self:write_lua ('\n' .. self.indent .. 
-            'plume.function_line[' .. self.top.fname .. '] = ' .. self.top.line)
     end
 end
 
