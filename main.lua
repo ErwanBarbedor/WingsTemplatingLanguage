@@ -1,5 +1,5 @@
 --[[
-LuaPlume #VERSION
+#VERSION
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -94,14 +94,25 @@ function Plume:render(code, name)
 
     local luacode = self.transpiler:transpile (code)
 
-    local f, err = self.utils.load (luacode, "@" .. (name or "main") .. ".plume",  self.env)
-    if not f then
-        error(err)
+    if name then
+        name = name .. ".plume"
+    else
+        name = '<internal.plume>'
     end
 
-    local sucess, result = pcall(f)
+    self.luacode = luacode-- temp. Todo : store in a table each plume chunck
+
+    local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
+    if not f then
+        error(self:format_error (err), -1)
+    end
+    
+    local sucess, result = xpcall(f, function(err)
+        return self:format_error (err)
+    end)
+
     if not sucess then
-        self.utils.friendly_error (luacode, result)
+        error(result, -1)
     end
 
     result.luacode = luacode

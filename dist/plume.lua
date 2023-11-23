@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1700775181
+LuaPlume v1.0.0-alpha-1700781808
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha-1700775181"
+Plume._VERSION = "LuaPlume v1.0.0-alpha-1700781808"
 
 
 Plume.utils = {}
@@ -52,29 +52,36 @@ function Plume.utils.load (s, name, env)
     return f, err
 end
 
-function Plume.utils.friendly_error (code, err)
-    local name = err:match('^[^:]*')
-    err = err:sub(#name+2, -1)
-    local noline_lua = err:match('^[^:]*')
-    err = err:sub(#noline_lua+2, -1)
-    noline_lua = tonumber (noline_lua)
+function Plume.utils.convert_noline (code, line)
+    local indent, filename, noline, message = line:match('^(%s*)([^:]*):([^:]*):(.*)')
     
-    local error_line     = ""
-    local noline_plume   = 0
-    local noline_current = 0
-    for line in code:gmatch('[^\n]*\n?') do
-        noline_current = noline_current + 1
 
-        if line:match '^%s*%-%- line [0-9]+ : ' then
-            noline_plume, error_line = line:match '^%s*%-%- line ([0-9]+) : ([^\n]*)'
-        end
-
-        if noline_current >= noline_lua then
-            break
-        end
+    if not filename then
+        return line
     end
 
-    error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
+    if filename:match('%.plume$') or filename:match('%.plume>$') then
+        local noline_lua     = tonumber(noline)
+        local error_line     = ""
+        local noline_plume   = 0
+        local noline_current = 0
+
+        for line in code:gmatch('[^\n]*\n?') do
+            noline_current = noline_current + 1
+
+            if line:match '^%s*%-%- line [0-9]+ : ' then
+                noline_plume, error_line = line:match '^%s*%-%- line ([0-9]+) : ([^\n]*)'
+            end
+
+            if noline_current >= noline_lua then
+                break
+            end
+        end
+
+        return indent .. filename .. ":" .. noline_plume .. ":" .. message
+    else
+        return line
+    end
 end
 
 -- Predefined list of standard Lua variables/functions for various versions
@@ -704,14 +711,12 @@ function Plume:make_args_list (given_args, info)
     -- Then fill the gap with positional arguments
     local first_empy = 1
     for _, value in pairs(positional_args) do
-
         while first_empy <= #info do
             if not args[first_empy] then
                 args[first_empy] = value
                 break
             end
             first_empy = first_empy + 1
-            
         end
     end
 
@@ -723,6 +728,30 @@ function Plume:make_args_list (given_args, info)
     end
 
     return (unpack or table.unpack) (args, 1, #info)
+end
+
+function Plume:format_error (err)
+    -- Clean traceback from intern plume call
+    -- Convert the line number from the internal lua file
+    -- that is executed to the original plume file
+    local err_msg   = err
+    local traceback = debug.traceback()
+
+    -- Remove 3 first line
+    traceback = traceback:gsub('^[^\n]*\n[^\n]*\n[^\n]*\n', '')
+    -- Make err the first line:
+    traceback = err .. '\n' .. traceback
+    -- Remove everything after the first 'xpcall' call
+    traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
+
+    traceback = traceback:gsub('[^\n]*\n?', function (...)
+        return plume.utils.convert_noline (plume.luacode, ...)
+    end)
+
+    return traceback
+    
+
+    -- error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
 end
 
 function Plume:TokenList ()
@@ -897,14 +926,25 @@ function Plume:render(code, name)
 
     local luacode = self.transpiler:transpile (code)
 
-    local f, err = self.utils.load (luacode, "@" .. (name or "main") .. ".plume",  self.env)
-    if not f then
-        error(err)
+    if name then
+        name = name .. ".plume"
+    else
+        name = '<internal.plume>'
     end
 
-    local sucess, result = pcall(f)
+    self.luacode = luacode-- temp. Todo : store in a table each plume chunck
+
+    local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
+    if not f then
+        error(self:format_error (err), -1)
+    end
+    
+    local sucess, result = xpcall(f, function(err)
+        return self:format_error (err)
+    end)
+
     if not sucess then
-        self.utils.friendly_error (luacode, result)
+        error(result, -1)
     end
 
     result.luacode = luacode

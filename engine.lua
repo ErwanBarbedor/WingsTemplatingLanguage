@@ -90,14 +90,12 @@ function Plume:make_args_list (given_args, info)
     -- Then fill the gap with positional arguments
     local first_empy = 1
     for _, value in pairs(positional_args) do
-
         while first_empy <= #info do
             if not args[first_empy] then
                 args[first_empy] = value
                 break
             end
             first_empy = first_empy + 1
-            
         end
     end
 
@@ -109,4 +107,28 @@ function Plume:make_args_list (given_args, info)
     end
 
     return (unpack or table.unpack) (args, 1, #info)
+end
+
+function Plume:format_error (err)
+    -- Clean traceback from intern plume call
+    -- Convert the line number from the internal lua file
+    -- that is executed to the original plume file
+    local err_msg   = err
+    local traceback = debug.traceback()
+
+    -- Remove 3 first line
+    traceback = traceback:gsub('^[^\n]*\n[^\n]*\n[^\n]*\n', '')
+    -- Make err the first line:
+    traceback = err .. '\n' .. traceback
+    -- Remove everything after the first 'xpcall' call
+    traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
+
+    traceback = traceback:gsub('[^\n]*\n?', function (...)
+        return plume.utils.convert_noline (plume.luacode, ...)
+    end)
+
+    return traceback
+    
+
+    -- error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
 end
