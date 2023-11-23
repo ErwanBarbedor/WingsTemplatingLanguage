@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1700748838
+LuaPlume v1.0.0-alpha-1700750135
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha-1700748838"
+Plume._VERSION = "v1.0.0-alpha-1700750135"
 
 
 Plume.utils = {}
@@ -380,7 +380,7 @@ function Plume.transpiler:capture_syntax_feature (capture)
         and
         (self.top.name == 'call' or self.top.name == "lua-inline") then
 
-        self:handle_call (command)
+        self:handle_inside_call (command)
 
     elseif command == self.patterns.arg_separator and self.top.name == 'call' then
         -- Inside a call, push a new argument
@@ -401,7 +401,7 @@ function Plume.transpiler:capture_syntax_feature (capture)
     return false
 end
 
-function Plume.transpiler:handle_call (command)
+function Plume.transpiler:handle_inside_call (command)
 
     -- check brace nested deep
     if command == self.patterns.open_call then
@@ -423,12 +423,12 @@ function Plume.transpiler:handle_call (command)
     -- In case of begin sugar, we'll now capture next code.
     elseif self.top.name == 'call' then
         
-        if self.top.is_struct then
+        if self.top.is_begin_sugar then
             self:write_functioncall_arg_end ()
             self:decrement_indent ()
             self:write_lua (',')
             self:write_functioncall_arg_begin ("['"..self.patterns.special_name_prefix.."body'] = ")
-            table.insert(self.stack, {name="struct"})
+            table.insert(self.stack, {name="begin-sugar"})
         else
             self:write_functioncall_arg_end ()
             self:decrement_indent ()
@@ -482,82 +482,34 @@ end
 function Plume.transpiler:handle_plume_code (command)
     -- We are inside Plume code and no call to manage.
     -- Manage each of allowed keyword and macro/function call
+    
+    -- Open raw lua code chunck
     if command == "lua" then
-        -- Open raw lua code chunck
+        
         table.insert(self.stack, {lua=true, name="lua"})
         self:write_lua ('\n' .. self.indent .. '-- Begin raw lua code\n', true)
 
-    elseif command == "function" then
-        -- Declare a new function and open a lua code chunck
-        local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
-        self.line = self.line:sub((#space+#name)+1, -1)
-        local args = self.line:match('%b()')
-        if args then
-            self.line = self.line:sub(#args+1, -1)
-        else
-            args = "()"
-        end
-
-        local args_name, args_info = self:extract_args (args)
-
-        self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' ' .. args_name)
-        self:increment_indent ()
-
-        table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name, line=self.noline})
-
-    elseif command == "macro" then
-        -- Declare a new function
-        local space, name = self.line:match('^(%s*)(' .. self.patterns.identifier .. ')')
-        self.line = self.line:sub((#space+#name)+1, -1)
-        local args = self.line:match('^%b()')
-        if args then
-            self.line = self.line:sub(#args+1, -1)
-        else
-            args = "()"
-        end
-
-        local args_name, args_info = self:extract_args (args)
-
-        self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' ' .. args_name)
-        self:increment_indent ()
-        self:write_lua ('\n' .. self.indent .. 'plume:push()')
-        table.insert(self.stack, {name="macro", args=args_info, fname=name, line=self.noline})
+    -- New function
+    elseif command == "function" or command == "macro" then
+        self:handle_new_function (command == "macro")
         
+    -- Open a lua chunck for iterator / condition
     elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
-        -- Open a lua chunck for iterator / condition
         table.insert(self.stack, {lua=true, name=command})
         self:write_lua ('\n'.. self.indent..command)
 
+    -- Just write "else" to the output
     elseif command == "else" then
         self:decrement_indent()
         self:write_lua ('\n'.. self.indent..command)
         self:increment_indent()
 
+    -- Close function/macro declaration, lua chunck or for/if/while structure
     elseif command == "end" then
-        table.remove(self.stack)
-        if self.top.name == 'macro' then
-            self:write_lua ('\n' .. self.indent .. 'return plume:pop ()')
+        self:handle_end_keyword ()
 
-        end
-
-        if self.top.name == "struct" then
-            self:write_functioncall_arg_end ()
-            self:decrement_indent ()
-            self:write_functioncall_end ()
-        else
-            self:decrement_indent ()
-            self:write_lua ('\n' .. self.indent .. 'end')
-        end
-
-        if self.top.name == 'macro' then
-            self:write_lua ('\n' .. self.indent .. 
-                'plume.function_args[' .. self.top.fname .. '] = ' .. self.top.args)
-             self:write_lua ('\n' .. self.indent .. 
-                'plume.function_line[' .. self.top.fname .. '] = ' .. self.top.line)
-        end
-
-    elseif command == self.patterns.open_call then
-        -- Enter lua-inline
+   -- Enter lua-inline
+    elseif command == self.patterns.open_call then 
         local declaration = self.line:match('^%s*local%s+%w+%s*=%s*') or self.line:match('^%s*%w+%s*=%s*')
         
         if declaration then
@@ -569,53 +521,102 @@ function Plume.transpiler:handle_plume_code (command)
         end
         
         table.insert(self.stack, {name="lua-inline", lua=true, deep=1, declaration=declaration})
-        
         self:increment_indent ()
 
+    -- It is a comment, do nothing and break line
     elseif command == self.patterns.comment then
         return true
 
-    else--call macro/function
+    -- If the command it isn't a keyword, it is a macro call
+    else
+       self:handle_macro_call (command) 
+    end
+end
+
+function Plume.transpiler:handle_new_function (ismacro)
+    -- Declare a new function. If is not a macro, open a lua code chunck
+    local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
+    self.line = self.line:sub((#space+#name)+1, -1)
+    local args = self.line:match('^%b()')
+    if args then
+        self.line = self.line:sub(#args+1, -1)
+    else
+        args = "()"
+    end
+
+    local args_name, args_info = self:extract_args (args)
+
+    self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' ' .. args_name)
+    self:increment_indent ()
+
+    if ismacro then
+        self:write_lua ('\n' .. self.indent .. 'plume:push()')
+        table.insert(self.stack, {name="macro", args=args_info, fname=name, line=self.noline})
+    else
+        table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name, line=self.noline})
+    end     
+end
+
+function Plume.transpiler:handle_end_keyword ()
+    table.remove(self.stack)
+    if self.top.name == 'macro' then
+        self:write_lua ('\n' .. self.indent .. 'return plume:pop ()')
+    end
+
+    if self.top.name == "begin-sugar" then
+        self:write_functioncall_arg_end ()
+        self:decrement_indent ()
+        self:write_functioncall_end ()
+    else
+        self:decrement_indent ()
+        self:write_lua ('\n' .. self.indent .. 'end')
+    end
+
+    -- Write function informations
+    if self.top.name == 'macro' then
+        self:write_lua ('\n' .. self.indent .. 
+            'plume.function_args[' .. self.top.fname .. '] = ' .. self.top.args)
+        self:write_lua ('\n' .. self.indent .. 
+            'plume.function_line[' .. self.top.fname .. '] = ' .. self.top.line)
+    end
+end
+
+function Plume.transpiler:handle_macro_call (command)
+    local is_begin_sugar
+    if command == "begin" then
+        is_begin_sugar = true
+        self.line = self.line:gsub('^%s*', '')
+        command = self.line:match('^' .. self.patterns.identifier)
+        self.line = self.line:sub(#command+1, -1)
+    end
+
+    if not is_begin_sugar then
+        self.pure_lua_line = false
+    end
+
+    if self.line:match('^%(%s*%)') then
+        self.line = self.line:gsub('^%(%s*%)', '')
+        self:write_variable (command)
+    
+    elseif self.line:match('^%' .. self.patterns.open_call) then
+        self.line = self.line:sub(2, -1)
+        self:write_functioncall_begin (command)
         
-        local is_struct
-        if command == "begin" then
-            is_struct = true
-            self.line = self.line:gsub('^%s*', '')
-            command = self.line:match('^' .. self.patterns.identifier)
-            self.line = self.line:sub(#command+1, -1)
-        end
+        local name = self:capture_functioncall_named_arg ()
+        self:write_functioncall_arg_begin (name)
 
-        if not is_struct then
-            self.pure_lua_line = false
-        end
+        table.insert(self.stack, {name="call", deep=1, is_begin_sugar=is_begin_sugar})
+    
+    -- Duplicate code with arg_separator check
+    elseif is_begin_sugar then
+        self:write_functioncall_begin (command)
+        self:write_functioncall_arg_begin ("['"..self.patterns.special_name_prefix.."body'] = ")
+        self:increment_indent ()
 
-        if self.line:match('^%(%s*%)') then
-            self.line = self.line:gsub('^%(%s*%)', '')
-            self:write_variable (command)
-        
-        elseif self.line:match('^%' .. self.patterns.open_call) then
-            self.line = self.line:sub(2, -1)
-            self:write_functioncall_begin (command)
-            
-            local name = self:capture_functioncall_named_arg ()
-            self:write_functioncall_arg_begin (name)
-
-            table.insert(self.stack, {name="call", deep=1, is_struct=is_struct})
-        
-        -- Rename is_struct to begin_sugar
-        -- Duplicate code with arg_separator check
-        elseif is_struct then
-            self:write_functioncall_begin (command)
-
-            self:write_functioncall_arg_begin ("['"..self.patterns.special_name_prefix.."body'] = ")
-            
-            self:increment_indent ()
-
-            table.insert(self.stack, {name="struct"})
-        
-        else
-            self:write_variable (command)
-        end
+        table.insert(self.stack, {name="begin-sugar"})
+    
+    else
+        self:write_variable (command)
     end
 end
 
