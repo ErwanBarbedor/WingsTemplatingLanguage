@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1700774383
+LuaPlume v1.0.0-alpha-1700775181
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "v1.0.0-alpha-1700774383"
+Plume._VERSION = "v1.0.0-alpha-1700775181"
 
 
 Plume.utils = {}
@@ -599,7 +599,7 @@ function Plume.transpiler:handle_macro_call (command)
 
     if self.line:match('^%(%s*%)') then
         self.line = self.line:gsub('^%(%s*%)', '')
-        self:write_variable (command)
+        self:write_variable (command..'()')
     
     elseif self.line:match('^%' .. self.patterns.open_call) then
         self.line = self.line:sub(2, -1)
@@ -618,8 +618,10 @@ function Plume.transpiler:handle_macro_call (command)
 
         table.insert(self.stack, {name="begin-sugar"})
     
+    -- Implicite function call.
+    -- Cumbersome, but a way to have function name in traceback when the function throw an error
     else
-        self:write_variable (command)
+        self:write_variable (' type(' .. command .. ') == "function" and ' .. command .. '() or ' .. command .. ' ')
     end
 end
 
