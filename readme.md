@@ -21,7 +21,7 @@ Bien que développé initialement pour la création de supports pédagogiques en
 
 ## Points forts
   - Syntaxe régulière et lisible
-  - Variables, arithmétiques
+  - Variables, arithmétique
   - Structures de controles for/while/if
   - Macros
   - Possibilité d'écrire du code lua directement dans le document
