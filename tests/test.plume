@@ -285,13 +285,13 @@ foo
 #---------------------------------
 
 #-- TEST : include 1
-#include(toinclude)
+#import(toinclude)
 #-- RESULT
 foo
 #-- END
 
 #-- TEST : include 1
-#include(lib)
+#import(lib)
 #foo
 #-- RESULT
 

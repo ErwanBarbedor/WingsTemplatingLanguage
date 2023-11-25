@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1700872505
+LuaPlume v1.0.0-alpha-1700950883
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "LuaPlume v1.0.0-alpha-1700872505"
+Plume._VERSION = "LuaPlume v1.0.0-alpha-1700950883"
 
 
 Plume.utils = {}
@@ -847,7 +847,7 @@ Plume.std = {}
 -- All std functions will be included in plume.env at 
 -- plume instance creation.
 
-function Plume.std.include(plume, args)
+function Plume.std.import(plume, args)
     -- This function work like require :
     -- Search for a file named 'name.plume' and 'execute it'
     -- In the context of plume, the file will be rendered and added to the output

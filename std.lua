@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License along with Lua
 -- All std functions will be included in plume.env at 
 -- plume instance creation.
 
-function Plume.std.include(plume, args)
+function Plume.std.import(plume, args)
     -- This function work like require :
     -- Search for a file named 'name.plume' and 'execute it'
     -- In the context of plume, the file will be rendered and added to the output
