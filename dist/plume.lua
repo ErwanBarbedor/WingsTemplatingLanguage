@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1700781808
+LuaPlume v1.0.0-alpha-1700872505
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "LuaPlume v1.0.0-alpha-1700781808"
+Plume._VERSION = "LuaPlume v1.0.0-alpha-1700872505"
 
 
 Plume.utils = {}
