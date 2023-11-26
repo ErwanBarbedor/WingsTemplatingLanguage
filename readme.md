@@ -319,5 +319,32 @@ Par soucis de légèreté, la converstion sera automatique en cas de concaténat
 #### plume:push ()
 #### plume:pop ()
 
+## Performances
+Plume est certainement plutôt lent :
+  - Etape de transpilation
+  - Appel de macro plutôt lourd
+  - Lua n'est pas très bon avec les chaînes de caractère
+
+Dans le futur, je ferais des tests pour avoir une idée claire des performances de Plume, et si besoin de l'optimiser.
+
+## Futures fonctionnalités
+### Version 1.1
+Vérication effectués par le transpiler :
+  - Est-ce qu'il y a bien un #end pour chaque #for / #if / ...
+  - Est-ce qu'il y a bien un #then après un #if, et non un #do...
+  - Est-ce que les noms de macros / variables sont des identifiants lua valides
+
+### Version 1.2 et après
+  - Permettre à l'utilisateur de modifier la syntaxe de Plume
+  - Donner un moyen simple d'utiliser des librairires lua externes
+  - Déclarer des macros locales
+  - Mots-clefs #do et #repeat
+  - Rendre l'usage des TokenList flexible
+  - Réfléchir aux performances et, si besoin
+
+### En réflexion
+  - Permettre à l'utilisateur d'étendre la syntaxe du transpileur (exemple : ```#alias oldname newname```) autrement que via des macros.
+  - Nouvelle structure ```#raw ... #end```
+
 ## License
-Detail the license under which Plume is released.
+Plume est distribuée sous license GNU/GPL.
