@@ -62,12 +62,12 @@ function Plume:new ()
 
     -- Inherit from package.path
     plume.path=package.path:gsub('%.lua', '.plume')
-
     -- Stack used for managing nested constructs in the templating language
     plume.stack = {}
-
+    -- Activate/desactivate error handling by plume.
+    plume.PLUME_ERROR_HANDLING = true
+    
     plume.type = "plume"
-
     plume.transpiler:compile_patterns ()
 
     -- Populate plume.env with lua and plume defaut functions
@@ -104,11 +104,20 @@ function Plume:render(code, name)
 
     local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
     if not f then
-        error(self:format_error (err), -1)
+        if self.PLUME_ERROR_HANDLING then
+            error(self:format_error (err), -1)
+        else
+            error(err)
+        end
+        
     end
     
     local sucess, result = xpcall(f, function(err)
-        return self:format_error (err)
+        if self.PLUME_ERROR_HANDLING then
+            return self:format_error (err)
+        else
+            return err
+        end
     end)
 
     if not sucess then
