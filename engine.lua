@@ -56,12 +56,12 @@ function Plume:make_args_list (given_args, info)
     local named_args = {}
 
     for _, v in ipairs(given_args) do
-        table.insert(positional_args, v())
+        table.insert(positional_args, v)
     end
 
     for k, v in pairs(given_args) do
         if not tonumber(k) then
-            named_args[k] = v()
+            named_args[k] = v
         end
     end
 

@@ -206,7 +206,7 @@ end
 function Plume.transpiler:write_functioncall_arg_begin (name)
     -- write the begining of a argument : a function to encompass the argument body.
     -- name must be a valid lua key following by a '='
-    table.insert(self.chunck, '\n' .. self.indent .. (name or '') .. 'function()')
+    table.insert(self.chunck, '\n' .. self.indent .. (name or '') .. '(function()')
     self:increment_indent ()
     table.insert(self.chunck, '\n' .. self.indent .. 'plume:push()')
 end
@@ -215,7 +215,7 @@ function Plume.transpiler:write_functioncall_arg_end ()
     -- Closing args function
     table.insert(self.chunck, '\n' .. self.indent .. 'return plume:pop()')
     self:decrement_indent ()
-    table.insert(self.chunck, '\n' .. self.indent .. 'end')
+    table.insert(self.chunck, '\n' .. self.indent .. 'end)()')
     self:increment_indent ()
 end
 

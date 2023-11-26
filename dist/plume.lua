@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1701036604
+LuaPlume v1.0.0-alpha-1701036707
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "LuaPlume v1.0.0-alpha-1701036604"
+Plume._VERSION = "LuaPlume v1.0.0-alpha-1701036707"
 
 
 Plume.utils = {}
@@ -341,7 +341,7 @@ end
 function Plume.transpiler:write_functioncall_arg_begin (name)
     -- write the begining of a argument : a function to encompass the argument body.
     -- name must be a valid lua key following by a '='
-    table.insert(self.chunck, '\n' .. self.indent .. (name or '') .. 'function()')
+    table.insert(self.chunck, '\n' .. self.indent .. (name or '') .. '(function()')
     self:increment_indent ()
     table.insert(self.chunck, '\n' .. self.indent .. 'plume:push()')
 end
@@ -350,7 +350,7 @@ function Plume.transpiler:write_functioncall_arg_end ()
     -- Closing args function
     table.insert(self.chunck, '\n' .. self.indent .. 'return plume:pop()')
     self:decrement_indent ()
-    table.insert(self.chunck, '\n' .. self.indent .. 'end')
+    table.insert(self.chunck, '\n' .. self.indent .. 'end)()')
     self:increment_indent ()
 end
 
@@ -678,12 +678,12 @@ function Plume:make_args_list (given_args, info)
     local named_args = {}
 
     for _, v in ipairs(given_args) do
-        table.insert(positional_args, v())
+        table.insert(positional_args, v)
     end
 
     for k, v in pairs(given_args) do
         if not tonumber(k) then
-            named_args[k] = v()
+            named_args[k] = v
         end
     end
 
