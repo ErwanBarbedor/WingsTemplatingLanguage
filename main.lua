@@ -67,7 +67,7 @@ function Plume:new ()
     -- Track differents files rendered in the same instance
     plume.filestack = {}
     -- Activate/desactivate error handling by plume.
-    plume.PLUME_ERROR_HANDLING = true
+    plume.PLUME_ERROR_HANDLING = false
     
     plume.type = "plume"
     plume.transpiler:compile_patterns ()

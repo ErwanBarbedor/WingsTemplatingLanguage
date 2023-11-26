@@ -284,16 +284,22 @@ foo
 
 #---------------------------------
 
-#-- TEST : include 1
-#import(toinclude)
+#-- TEST : import 1
+#import(toimport)
 #-- RESULT
 foo
 #-- END
 
-#-- TEST : include 1
+#-- TEST : import 2
 #import(lib)
 #foo
 #-- RESULT
 
  bar 
+#-- END
+
+#-- TEST : include
+#include(lib.plume)
+#-- RESULT
+#macro foo bar #end
 #-- END

@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1701016330
+LuaPlume v1.0.0-alpha-1701016741
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "LuaPlume v1.0.0-alpha-1701016330"
+Plume._VERSION = "LuaPlume v1.0.0-alpha-1701016741"
 
 
 Plume.utils = {}
@@ -891,6 +891,21 @@ function Plume.std.import(plume, args)
     return result
 end
 
+function Plume.std.include (plume, args)
+    -- include a file in the document, without execute it
+    -- the path must be relative to the current file
+    local name = plume:make_args_list(args)
+
+    local path = plume:dirname () .. name:tostring ()
+
+    local file = io.open(path)
+    if not file then
+        error("The file '" .. path .. "' doesn't exist.")
+    end
+
+    return file:read '*a'
+end
+
 
 function Plume:new ()
     -- Create Plume interpreter instance.
@@ -910,7 +925,7 @@ function Plume:new ()
     -- Track differents files rendered in the same instance
     plume.filestack = {}
     -- Activate/desactivate error handling by plume.
-    plume.PLUME_ERROR_HANDLING = true
+    plume.PLUME_ERROR_HANDLING = false
     
     plume.type = "plume"
     plume.transpiler:compile_patterns ()
@@ -980,7 +995,7 @@ function Plume:renderFile (path)
     local file = io.open(path)
 
     if not file then
-        error("The file '" .. "' doesn't exist.")
+        error("The file '" .. path .. "' doesn't exist.")
     end
 
     return self:render(file:read"*a", path)

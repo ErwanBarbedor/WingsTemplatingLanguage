@@ -47,3 +47,18 @@ function Plume.std.import(plume, args)
     
     return result
 end
+
+function Plume.std.include (plume, args)
+    -- include a file in the document, without execute it
+    -- the path must be relative to the current file
+    local name = plume:make_args_list(args)
+
+    local path = plume:dirname () .. name:tostring ()
+
+    local file = io.open(path)
+    if not file then
+        error("The file '" .. path .. "' doesn't exist.")
+    end
+
+    return file:read '*a'
+end
