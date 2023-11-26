@@ -173,12 +173,6 @@ Une connaissance du langage Lua aidera grandement à comprendre cette section.
 En interne, Plume transpile le document en un fichier Lua, puis execute ce dernier.
 En comprenant comment fonctionnent cette transpilation, vous pouvez faire avec Plume tout ce que vous pouvez faire avec Lua.
 
-Exemple :
-``` plume
-
-```
-Donne :
-
 
 ### Mode texte, mode lua
 Lorsque Plume parcout le document afin de le transpiler, il sépare le code en trois catégories :
@@ -196,6 +190,25 @@ Par exemple, dans le code suivant:
   - #for, #do et #end sont des éléments de controle. Ils permettent à Plume de créer et de délimiter une boucle "for".
   - "Ceci est une ligne!" est du texte. Il apparaitra sans modification dans le fichier de sortie.
   - "i=1, 3" est le code Lua qui contrôle l'execution de la boucle for. Il sera écrit tel quel dans le code transpilé ; vous pouvez en fait écrire ce que vous voulez. Si vous écrivez du code invalide, ce n'est pas Plume qui affichera un message d'erreur, mais Lua.
+
+D'où le code Lua:
+```lua
+plume:push ()
+
+
+-- line 1 : #for i=1, 3 #do
+for i=1, 3 do
+
+    -- line 2 : Ceci est une ligne!
+    plume:write 'Ceci est une ligne!'
+    plume:write '\n'
+
+-- line 3 : #end
+end
+
+
+return plume:pop ()
+```
 
 ### Variables et mots-clefs
 Les éléments de contrôle sont soit des mots-clefs (for, function, ...) soit des variables.
