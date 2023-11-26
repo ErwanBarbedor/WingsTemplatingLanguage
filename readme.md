@@ -14,26 +14,30 @@ Plume est un langage de templating centrée autour de la flexibilité et l'exten
 Bien que développé initialement pour la création de supports pédagogiques en HTML/CSS, Plume présente un potentiel d'utilisation dans divers contextes :
 
 - Génération dynamique de rapports ou de documents comportant des éléments récurrents.
-- Templating de sites web statiques nécessitant une maintenance et des mises à jour régulières de contenus.
-- Automatisation de newsletters ou d’e-mails personnalisés à partir de modèles.
-- Génération de code source ou de données de configuration à partir de templates personnalisés.
+- La personnalisation de sites web statiques ayant besoin de mises à jour fréquentes.
+- L'automatisation de newsletters ou de courriels personnalisés à partir de modèles établis.
+- La création de code source ou de fichiers de configurations sur la base de templates personnalisables.
+
 
 ## Points forts
-  - Syntaxe régulière et lisible
-  - Variables, arithmétique
-  - Structures de controles for/while/if
-  - Macros
-  - Possibilité d'écrire du code lua directement dans le document
-  - Possibilité d'étendre Plume avec des librairies lua
+- Une syntaxe cohérente et claire.
+- La gestion de variables et les opérations arithmétiques.
+- Des structures de contrôle comme les boucles for/while et les conditions if.
+- La définition et l'utilisation de macros.
+- L'intégration de code Lua directement dans les templates.
+- La possibilité d'enrichir Plume avec des bibliothèques Lua supplémentaires.
+
 
 ## Installation
 Plume est écrit en Lua et compatible avec les versions de 5.1 à 5.4, ainsi que luajit.
 
 ## Utilisation basique
-Si vous maîtrisez Lua, je vous conseille de directement sauter à la section suivante.
+Pour ceux qui débutent en Lua ou qui ne sont pas familiers avec les langages de scripting, veuillez suivre cette section. Les utilisateurs expérimentés en Lua peuvent passer directement à la section avancée.
+
 
 ### Syntaxe basique
-Tout texte simple sera rendu tel quel.
+Tout texte écrit sans commande spéciale sera produit tel quel dans le document final.
+
 
 Entrée:
 ``` plume
@@ -46,9 +50,9 @@ foo
 ```
 
 ### Macros simples
-Vous pouvez stocker des bouts de code à l'intérieur de "macros".
-Cela est utile, par exemple, si vous utilisez un nom à de nombreuses reprises dans votre document et que vous souhaitez pouvoir le changer rapidement
+Les macros permettent d'encapsuler et de réutiliser des fragments de texte ou de code. Elles sont particulièrement utiles lorsque vous avez besoin de répéter certaines parties d'un document et que vous voulez préserver la facilité de maintenance, comme lorsqu'il est nécessaire de modifier un élément répandu à travers le document.
 
+Exemple d'utilisation d'une macro simple :
 Entrée :
 ``` plume
 #macro auteur Jean Dupont #end
@@ -60,23 +64,24 @@ Sortie :
 Cet article a été écrit par Jean Dupont
 ```
 
-Notez l'utilisation du symbole '#' : tout élément de syntaxe commence forcément par lui.
-Pour définir une macro, on écrit
+Il est à noter que tous les éléments de la syntaxe Plume commencent par le symbole dièse (#). Pour définir une macro, on utilise la forme suivante :
 
 ``` plume
 #macro nom_de_la_macro
   texte de remplacement
 #end
 ```
-On peut l'écrire sur une seule ligne, comme dans l'exemple.
-Pour utiliser la macro, il suffit de faire :
+
+Cette macro peut être déclarée sur une ligne unique, comme montré dans l'exemple précédent. Pour utiliser la macro dans votre texte, vous écrivez simplement :
+
 ``` plume
 #nom_de_la_macro
 ```
 
 ### Paramètres de macro
-Parfois, avoir une macro qui donne toujours le même résultat est insufisant.
-Heureusement, on peut ajouter des paramètres à la macro :
+Une macro statique peut s'avérer limitée pour certains besoins. Heureusement, Plume permet l'ajout de paramètres aux macros pour une plus grande flexibilité :
+
+Exemple avec des paramètres :
 
 Entrée :
 ``` plume
@@ -91,14 +96,18 @@ Sortie :
 Cette phrase est écrite deux fois Cette phrase est écrite deux fois
 ```
 
-On aurait pu écrire aussi, pour le même résultat, 
+Une alternative pour le même résultat serait :
+
 ``` plume
 #double(x=Cette phrase est écrite deux fois)
 ```
 
-Notrez l'usage du '#' devant le x, qui signifie 'ne pas écrire la lettre x, mais le paramètre donné à la macro".
+Il est important de remarquer l'emploi du dièse (#) devant le "x", qui indique qu'il ne s'agit pas d'afficher le caractère "x", mais bien la valeur associée au paramètre de la macro.
 
-Une macro peut avoir autant de paramètres que vous le voulez. Il suffit de les séparers par des virgules.
+Une macro peut contenir de multiples paramètres, il suffit de les séparer par des virgules.
+
+Exemple avec plusieurs paramètres :
+
 Entrée :
 ``` plume
 #macro concat3(x, y, z) #x-#y-#z #end
@@ -126,9 +135,6 @@ Sortie :
 M. Dupont
 Mdm Dupont
 ```
-
-### Structure begin
-
 
 ### Inclure un autre fichier
 Vous pouvez inclure dans votre document n'importe quel fichier en utilisant les macros #import et #include.
@@ -166,6 +172,13 @@ Une connaissance du langage Lua aidera grandement à comprendre cette section.
 ### Fonctionnement de Plume
 En interne, Plume transpile le document en un fichier Lua, puis execute ce dernier.
 En comprenant comment fonctionnent cette transpilation, vous pouvez faire avec Plume tout ce que vous pouvez faire avec Lua.
+
+Exemple :
+``` plume
+
+```
+Donne :
+
 
 ### Mode texte, mode lua
 Lorsque Plume parcout le document afin de le transpiler, il sépare le code en trois catégories :
@@ -301,10 +314,40 @@ Utilisez pour cela TokenList:tostring et TokenList:tonumber.
 
 Par soucis de légèreté, la converstion sera automatique en cas de concaténation ou d'opération arithmétique.
 
+### Structure begin
+Prenons une macro ```document```, censé contenir l'intégralité de votre texte.
+Plutôt que d'écrire
+``` plume
+#document(
+  ...
+)
+```
+Ce qui est peu lisible en cas d'imbrication et interdit l'usage des virgules (en effet, les virgules seront comprises comme des séparateurs de paramètre), il est possible d'utiliser la synaxe suivante:
+``` plume
+#begin document
+  ...
+#end
+```
+
+Si document a besoin de d'autres paramètres :
+
+``` plume
+#begin document(arg1, arg2, ...)
+  ...
+#end
+```
+
+Tout ce qui se situe entre #begin et #end sera considéré comme le premier argument.
+
 ### Ajouter des fichiers externes
 #### require
 #### import
 #### include
+### Echapper des caractères
+Il n'y a pas de caractère d'échappement en Plume.
+Si cela vous pose vraiment problème, deux solutions:
+- Mettre le texte fautif dans un fichier et utiliser ```#include```
+- Utilier une structure lua-inline : ```#("#for")```
 
 ## Usage Expert
 ### Passation de paramètres
@@ -345,6 +388,8 @@ Vérication effectués par le transpiler :
 ### En réflexion
   - Permettre à l'utilisateur d'étendre la syntaxe du transpileur (exemple : ```#alias oldname newname```) autrement que via des macros.
   - Nouvelle structure ```#raw ... #end```
+  - Gestion des espaces. Les garder tous? Les supprimer? Un juste milieu?
+  - Gestion des caractères à échapper.
 
 ## License
 Plume est distribuée sous license GNU/GPL.
