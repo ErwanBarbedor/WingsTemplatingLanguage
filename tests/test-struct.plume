@@ -1,0 +1,50 @@
+
+#-- TEST : for 1
+#for i=1, 2 #do
+    foo
+#end
+#-- RESULT
+foo
+foo
+#-- END
+
+#-- TEST : for 2
+#for i=1, 10 #do #i #end
+#-- RESULT
+ 1  2  3  4  5  6  7  8  9  10 
+#-- END
+
+#-- TEST : for 3
+#for i=1, 2 #do
+    #for j=1, 2 #do
+        #i*#j=#(i*j)
+    #end
+#end
+#-- RESULT
+1*1=1
+1*2=2
+2*1=2
+2*2=4
+#-- END
+
+#-- TEST : while
+#lua i=5 #end
+#while i>2 #do
+    #i
+    #lua i=i-1 #end
+#end
+#-- RESULT
+5
+4
+3
+#-- END
+
+#-- TEST : if
+#if 1+1==2 #then
+    foo
+#else
+    bar
+#end
+#-- RESULT
+foo
+#-- END

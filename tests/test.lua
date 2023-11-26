@@ -108,54 +108,56 @@ local function test(plume_path, test_path, simplelog, fullog)
     package.path = package.path .. ";"..plumedir.."?.lua"..";"..testdir.."/?.lua"
 
     local Plume = require (plumename)
-    local tests = io.open(test_path):read'*a'
 
     local n_test   = 0
     local n_sucess = 0
 
     local log = simplelog or fullog
 
-    for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
-        local plumecode = {}
-        local result    = {}
-        local name = test:match ('#%-%- TEST : ([^\n]*)')
-        test = test:gsub('#%-%- TEST : [^\n]*\n', ''):gsub('#%-%- END', '')
+    for name in ("base scope call struct"):gmatch('%S+') do
+        local tests = io.open(test_path .. "test-" .. name .. ".plume"):read'*a'
+        for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
+            local plumecode = {}
+            local result    = {}
+            local name = test:match ('#%-%- TEST : ([^\n]*)')
+            test = test:gsub('#%-%- TEST : [^\n]*\n', ''):gsub('#%-%- END', '')
 
-        local in_code = true
+            local in_code = true
 
-        for line in test:gmatch('[^\n]*\n?') do
-            if line == '#-- RESULT\n' then
-                in_code = false
-            elseif in_code then
-                table.insert(plumecode, line)
+            for line in test:gmatch('[^\n]*\n?') do
+                if line == '#-- RESULT\n' then
+                    in_code = false
+                elseif in_code then
+                    table.insert(plumecode, line)
+                else
+                    table.insert(result, line)
+                end
+            end
+
+            plumecode = table.concat(plumecode, "")
+            result    = table.concat(result, "")
+
+            local plume = Plume:new ()
+            local sucess, output  = pcall(plume.render, plume, plumecode, test_path)
+            local soutput
+            if sucess then
+                soutput = output:tostring()
+            end
+
+            n_test = n_test + 1
+            if not sucess then
+                if fullog then
+                    print('Test ' .. name .. ' failed with error:' .. output)
+                end
+            elseif soutput ~= result then
+                if fullog then
+                    print('Test ' .. name .. ' failed :')
+                    print_diff (result, soutput)
+                    print('[[' .. soutput .. ']]')
+                end
             else
-                table.insert(result, line)
+                n_sucess = n_sucess + 1
             end
-        end
-
-        plumecode = table.concat(plumecode, "")
-        result    = table.concat(result, "")
-
-        local plume = Plume:new ()
-        local sucess, output  = pcall(plume.render, plume, plumecode, test_path)
-        local soutput
-        if sucess then
-            soutput = output:tostring()
-        end
-
-        n_test = n_test + 1
-        if not sucess then
-            if fullog then
-                print('Test ' .. name .. ' failed with error:' .. output)
-            end
-        elseif soutput ~= result then
-            if fullog then
-                print('Test ' .. name .. ' failed :')
-                print_diff (result, soutput)
-                print('[[' .. soutput .. ']]')
-            end
-        else
-            n_sucess = n_sucess + 1
         end
     end
 

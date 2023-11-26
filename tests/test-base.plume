@@ -1,0 +1,73 @@
+#-- TEST : basic text
+foo
+#-- RESULT
+foo
+#-- END
+
+#---------------------------------
+
+#-- TEST : comment 1
+#-- Commentary
+#-- RESULT
+#-- END
+
+#-- TEST : comment 2
+foo #-- Commentary
+#-- RESULT
+foo 
+#-- END
+
+#-- TEST : comment 3
+foo
+#-- Commentary
+bar
+#-- RESULT
+foo
+bar
+#-- END
+
+#---------------------------------
+
+#-- TEST : begin sugar 1
+#macro foo(x) <#x> #end
+#begin foo
+    foo
+#end
+#-- RESULT
+
+ <foo
+> #-- END
+
+#-- TEST : begin sugar 2
+#macro foo(x, y) <#y:#x> #end
+#begin foo(bar)
+    foo
+#end
+#-- RESULT
+
+ <bar:
+foo
+> #-- END
+
+
+#---------------------------------
+
+#-- TEST : import 1
+#import(toimport)
+#-- RESULT
+foo
+#-- END
+
+#-- TEST : import 2
+#import(lib)
+#foo
+#-- RESULT
+
+ bar 
+#-- END
+
+#-- TEST : include
+#include(lib.plume)
+#-- RESULT
+#macro foo bar #end
+#-- END

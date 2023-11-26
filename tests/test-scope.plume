@@ -1,0 +1,23 @@
+#-- TEST : lua 1
+#(a=5)
+#a
+#-- RESULT
+5
+#-- END
+
+#-- TEST : lua 2
+#(a=5)
+#macro foo #(local a = 2) #a #end
+#foo #a
+#-- RESULT
+
+  2  5
+#-- END
+
+#-- TEST : lua-inline eval
+#(1+1)
+#-- RESULT
+2
+#-- END
+
+#---------------------------------
