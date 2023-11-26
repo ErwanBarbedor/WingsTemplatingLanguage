@@ -62,8 +62,10 @@ function Plume:new ()
 
     -- Inherit from package.path
     plume.path=package.path:gsub('%.lua', '.plume')
-    -- Stack used for managing nested constructs in the templating language
+    -- Stack used for managing nested constructs
     plume.stack = {}
+    -- Track differents files rendered in the same instance
+    plume.filestack = {}
     -- Activate/desactivate error handling by plume.
     plume.PLUME_ERROR_HANDLING = true
     
@@ -89,18 +91,18 @@ function Plume:new ()
     return plume
 end
 
-function Plume:render(code, name)
+function Plume:render(code, filename)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
 
-    if name then
-        name = name .. ".plume"
-    else
-        name = '<internal.plume>'
-    end
+    table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
 
-    self.luacode = luacode-- temp. Todo : store in a table each plume chunck
+    if filename then
+        name = filename .. ".plume"
+    else
+        name = '<internal-'..#self.filestack..'.plume>'
+    end
 
     local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
     if not f then
@@ -124,8 +126,21 @@ function Plume:render(code, name)
         error(result, -1)
     end
 
+    table.remove(self.filestack)
+
     result.luacode = luacode
     return result
+end
+
+function Plume:renderFile (path)
+    -- Too automaticaly read the file and pass the name to render
+    local file = io.open(path)
+
+    if not file then
+        error("The file '" .. path .. "' doesn't exist.")
+    end
+
+    return self:render(file:read"*a", path)
 end
 
 return Plume

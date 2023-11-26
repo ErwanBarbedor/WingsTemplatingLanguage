@@ -1,5 +1,5 @@
 --[[
-LuaPlume v1.0.0-alpha-1700958775
+LuaPlume v1.0.0-alpha-1701016330
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/LuaPlume
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Plume = {}
 
-Plume._VERSION = "LuaPlume v1.0.0-alpha-1700958775"
+Plume._VERSION = "LuaPlume v1.0.0-alpha-1701016330"
 
 
 Plume.utils = {}
@@ -745,13 +745,24 @@ function Plume:format_error (err)
     traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
 
     traceback = traceback:gsub('[^\n]*\n?', function (...)
-        return plume.utils.convert_noline (plume.luacode, ...)
+        return plume.utils.convert_noline (plume.filestack[#plume.filestack].luacode, ...)
     end)
 
     return traceback
-    
-
     -- error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
+end
+
+function Plume:filename ()
+    local top = self.filestack[#self.filestack]
+    if not top then
+        error ("Not file running.")
+    end
+    return top.filename
+end
+
+function Plume:dirname ()
+    local filename = self:filename ()
+    return filename and filename:gsub('[^/]*$', '')
 end
 
 function Plume:TokenList ()
@@ -894,12 +905,14 @@ function Plume:new ()
 
     -- Inherit from package.path
     plume.path=package.path:gsub('%.lua', '.plume')
-
-    -- Stack used for managing nested constructs in the templating language
+    -- Stack used for managing nested constructs
     plume.stack = {}
-
+    -- Track differents files rendered in the same instance
+    plume.filestack = {}
+    -- Activate/desactivate error handling by plume.
+    plume.PLUME_ERROR_HANDLING = true
+    
     plume.type = "plume"
-
     plume.transpiler:compile_patterns ()
 
     -- Populate plume.env with lua and plume defaut functions
@@ -921,34 +934,56 @@ function Plume:new ()
     return plume
 end
 
-function Plume:render(code, name)
+function Plume:render(code, filename)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
 
-    if name then
-        name = name .. ".plume"
-    else
-        name = '<internal.plume>'
-    end
+    table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
 
-    self.luacode = luacode-- temp. Todo : store in a table each plume chunck
+    if filename then
+        name = filename .. ".plume"
+    else
+        name = '<internal-'..#self.filestack..'.plume>'
+    end
 
     local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
     if not f then
-        error(self:format_error (err), -1)
+        if self.PLUME_ERROR_HANDLING then
+            error(self:format_error (err), -1)
+        else
+            error(err)
+        end
+        
     end
     
     local sucess, result = xpcall(f, function(err)
-        return self:format_error (err)
+        if self.PLUME_ERROR_HANDLING then
+            return self:format_error (err)
+        else
+            return err
+        end
     end)
 
     if not sucess then
         error(result, -1)
     end
 
+    table.remove(self.filestack)
+
     result.luacode = luacode
     return result
+end
+
+function Plume:renderFile (path)
+    -- Too automaticaly read the file and pass the name to render
+    local file = io.open(path)
+
+    if not file then
+        error("The file '" .. "' doesn't exist.")
+    end
+
+    return self:render(file:read"*a", path)
 end
 
 return Plume

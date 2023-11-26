@@ -137,7 +137,7 @@ local function test(plume_path, test_path, simplelog, fullog)
         result    = table.concat(result, "")
 
         local plume = Plume:new ()
-        local sucess, output  = pcall(plume.render, plume, plumecode)
+        local sucess, output  = pcall(plume.render, plume, plumecode, test_path)
         local soutput
         if sucess then
             soutput = output:tostring()

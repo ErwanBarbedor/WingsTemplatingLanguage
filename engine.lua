@@ -124,11 +124,22 @@ function Plume:format_error (err)
     traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
 
     traceback = traceback:gsub('[^\n]*\n?', function (...)
-        return plume.utils.convert_noline (plume.luacode, ...)
+        return plume.utils.convert_noline (plume.filestack[#plume.filestack].luacode, ...)
     end)
 
     return traceback
-    
-
     -- error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
+end
+
+function Plume:filename ()
+    local top = self.filestack[#self.filestack]
+    if not top then
+        error ("Not file running.")
+    end
+    return top.filename
+end
+
+function Plume:dirname ()
+    local filename = self:filename ()
+    return filename and filename:gsub('[^/]*$', '')
 end
