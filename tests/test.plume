@@ -6,6 +6,28 @@ foo
 
 #---------------------------------
 
+#-- TEST : comment 1
+#-- Commentary
+#-- RESULT
+#-- END
+
+#-- TEST : comment 2
+foo #-- Commentary
+#-- RESULT
+foo 
+#-- END
+
+#-- TEST : comment 3
+foo
+#-- Commentary
+bar
+#-- RESULT
+foo
+bar
+#-- END
+
+#---------------------------------
+
 #-- TEST : lua 1
 #(a=5)
 #a

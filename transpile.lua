@@ -78,6 +78,7 @@ function Plume.transpiler:transpile (code)
             end
             
         end
+        
         if (not self.pure_lua_line or keepspace ) and not is_last_line then
             self:write_text ('\n')
         end
@@ -267,7 +268,7 @@ function Plume.transpiler:capture_syntax_feature (capture)
         self:handle_lua_code (command)
     else
         -- this is plume code
-        self:handle_plume_code (command)
+        return self:handle_plume_code (command)
     end
 
     return false
