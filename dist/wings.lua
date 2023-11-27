@@ -1,8 +1,8 @@
 --[[
-Wings Script v0.1-alpha-1701125228
+Wings Script v0.1-alpha-1701198551
 Copyright (C) 2023  Erwan Barbedor
 
-Check https://github.com/ErwanBarbedor/Wings Script
+Check https://github.com/ErwanBarbedor/LuaWingsScript
 for documentation, tutorial or to report issues.
 
 This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Wings = {}
 
-Wings._VERSION = "Wings Script v0.1-alpha-1701125228"
+Wings._VERSION = "Wings Script v0.1-alpha-1701198551"
 
 
 Wings.utils = {}

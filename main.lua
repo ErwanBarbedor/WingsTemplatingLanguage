@@ -2,7 +2,7 @@
 #VERSION
 Copyright (C) 2023  Erwan Barbedor
 
-Check https://github.com/ErwanBarbedor/Wings Script
+Check https://github.com/ErwanBarbedor/LuaWingsScript
 for documentation, tutorial or to report issues.
 
 This program is free software: you can redistribute it and/or modify
