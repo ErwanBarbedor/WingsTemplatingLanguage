@@ -1,23 +1,23 @@
---[[This file is part of LuaPlume.
+--[[This file is part of Wings Script.
 
-LuaPlume is free software: you can redistribute it and/or modify
+Wings Script is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
 
-LuaPlume is distributed in the hope that it will be useful,
+Wings Script is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with Wings Script. If not, see <https://www.gnu.org/licenses/>.
 ]]
-Plume.utils = {}
+Wings.utils = {}
 
-function Plume.utils.copy (t)
+function Wings.utils.copy (t)
     local nt = {}
     for k, v in pairs(t) do
         if type(v) == 'table' then
-            nt[k] = Plume.utils.copy (v)
+            nt[k] = Wings.utils.copy (v)
         else
             nt[k] = v
         end
@@ -25,7 +25,7 @@ function Plume.utils.copy (t)
     return nt
 end
 
-function Plume.utils.load (s, name, env)
+function Wings.utils.load (s, name, env)
     -- Load string in a specified env
     -- Working for all lua versions
     if not setfenv  then
@@ -40,7 +40,7 @@ function Plume.utils.load (s, name, env)
     return f, err
 end
 
-function Plume.utils.convert_noline (code, line)
+function Wings.utils.convert_noline (code, line)
     local indent, filename, noline, message = line:match('^(%s*)([^:]*):([^:]*):(.*)')
     
 
@@ -48,17 +48,17 @@ function Plume.utils.convert_noline (code, line)
         return line
     end
 
-    if filename:match('%.plume$') or filename:match('%.plume>$') then
+    if filename:match('%.wings$') or filename:match('%.wings>$') then
         local noline_lua     = tonumber(noline)
         local error_line     = ""
-        local noline_plume   = 0
+        local noline_wings   = 0
         local noline_current = 0
 
         for line in code:gmatch('[^\n]*\n?') do
             noline_current = noline_current + 1
 
             if line:match '^%s*%-%- line [0-9]+ : ' then
-                noline_plume, error_line = line:match '^%s*%-%- line ([0-9]+) : ([^\n]*)'
+                noline_wings, error_line = line:match '^%s*%-%- line ([0-9]+) : ([^\n]*)'
             end
 
             if noline_current >= noline_lua then
@@ -66,14 +66,14 @@ function Plume.utils.convert_noline (code, line)
             end
         end
 
-        return indent .. filename .. ":" .. noline_plume .. ":" .. message
+        return indent .. filename .. ":" .. noline_wings .. ":" .. message
     else
         return line
     end
 end
 
 -- Predefined list of standard Lua variables/functions for various versions
-Plume.utils.LUA_STD_FUNCTION = {
+Wings.utils.LUA_STD_FUNCTION = {
     ["5.1"]="_VERSION arg assert collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall",
 
     ["5.2"]="_VERSION arg assert bit32 collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile loadstring math module next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type unpack xpcall xpcall",

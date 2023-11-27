@@ -1,17 +1,17 @@
---[[This file is part of LuaPlume.
+--[[This file is part of Wings Script.
 
-LuaPlume is free software: you can redistribute it and/or modify
+Wings Script is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
 
-LuaPlume is distributed in the hope that it will be useful,
+Wings Script is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with Wings Script. If not, see <https://www.gnu.org/licenses/>.
 ]]
-function Plume:TokenList ()
+function Wings:TokenList ()
     local tl = {}
     tl.type = "tokenlist"
 
@@ -87,7 +87,7 @@ function Plume:TokenList ()
     return tl
 end
 
-function Plume:Token (x)
+function Wings:Token (x)
     local tk = {}
     tk.content = x
     tk.type = "token"

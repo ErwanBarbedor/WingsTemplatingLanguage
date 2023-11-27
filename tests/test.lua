@@ -99,15 +99,15 @@ local function print_diff (a, b)
     io.write '\27[0m\n'
 end
 
-local function test(plume_path, test_path, simplelog, fullog)
+local function test(wings_path, test_path, simplelog, fullog)
     -- local testdir  = arg[1]
-    -- local plumedir = arg[1]:gsub('[^/]*$', '')
+    -- local wingsdir = arg[1]:gsub('[^/]*$', '')
     local testdir   = test_path :gsub('[^/]*$', '')
-    local plumedir  = plume_path:gsub('[^/]*$', '')
-    local plumename = plume_path:match('[^/]*$')
-    package.path = package.path .. ";"..plumedir.."?.lua"..";"..testdir.."/?.lua"
+    local wingsdir  = wings_path:gsub('[^/]*$', '')
+    local wingsname = wings_path:match('[^/]*$')
+    package.path = package.path .. ";"..wingsdir.."?.lua"..";"..testdir.."/?.lua"
 
-    local Plume = require (plumename)
+    local Wings = require (wingsname)
 
     local n_test   = 0
     local n_sucess = 0
@@ -115,9 +115,9 @@ local function test(plume_path, test_path, simplelog, fullog)
     local log = simplelog or fullog
 
     for name in ("base scope call struct"):gmatch('%S+') do
-        local tests = io.open(test_path .. "test-" .. name .. ".plume"):read'*a'
+        local tests = io.open(test_path .. "test-" .. name .. ".wings"):read'*a'
         for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
-            local plumecode = {}
+            local wingscode = {}
             local result    = {}
             local name = test:match ('#%-%- TEST : ([^\n]*)')
             test = test:gsub('#%-%- TEST : [^\n]*\n', ''):gsub('#%-%- END', '')
@@ -128,17 +128,17 @@ local function test(plume_path, test_path, simplelog, fullog)
                 if line == '#-- RESULT\n' then
                     in_code = false
                 elseif in_code then
-                    table.insert(plumecode, line)
+                    table.insert(wingscode, line)
                 else
                     table.insert(result, line)
                 end
             end
 
-            plumecode = table.concat(plumecode, "")
+            wingscode = table.concat(wingscode, "")
             result    = table.concat(result, "")
 
-            local plume = Plume:new ()
-            local sucess, output  = pcall(plume.render, plume, plumecode, test_path)
+            local wings = Wings:new ()
+            local sucess, output  = pcall(wings.render, wings, wingscode, test_path)
             local soutput
             if sucess then
                 soutput = output:tostring()
@@ -173,7 +173,7 @@ local optns = {}
 local i = 1
 while i <= #arg do
 
-    if arg[i] == '--plume' or arg[i] == '--test' then
+    if arg[i] == '--wings' or arg[i] == '--test' then
         optns[arg[i]:sub(3, -1)] = arg[i+1]
         i = i+1
     else
@@ -184,5 +184,5 @@ while i <= #arg do
 end
 
 if optns.run then
-    test (optns.plume, optns.test, optns.log, optns.fullog)
+    test (optns.wings, optns.test, optns.log, optns.fullog)
 end

@@ -1,4 +1,4 @@
-# Plume Templating Language
+# Wings Templating Language
 
 [🇫🇷 version](#Français)
 
@@ -7,11 +7,11 @@
 - [Introduction](#introduction)
 
 ## Introduction
-Plume est un langage de templating centrée autour de la flexibilité et l'extensibilité, créé pour répondre à des besoins spécifiques de rédaction automatisée et de génération de contenu dynamique, tout en restant intuitif pour les auteurs de documents. 
+Wings est un langage de templating centrée autour de la flexibilité et l'extensibilité, créé pour répondre à des besoins spécifiques de rédaction automatisée et de génération de contenu dynamique, tout en restant intuitif pour les auteurs de documents. 
 
 ## Cas d'Usage du Langage
 
-Bien que développé initialement pour la création de supports pédagogiques en HTML/CSS, Plume présente un potentiel d'utilisation dans divers contextes :
+Bien que développé initialement pour la création de supports pédagogiques en HTML/CSS, Wings présente un potentiel d'utilisation dans divers contextes :
 
 - Génération dynamique de rapports ou de documents comportant des éléments récurrents.
 - La personnalisation de sites web statiques ayant besoin de mises à jour fréquentes.
@@ -25,11 +25,11 @@ Bien que développé initialement pour la création de supports pédagogiques en
 - Des structures de contrôle comme les boucles for/while et les conditions if.
 - La définition et l'utilisation de macros.
 - L'intégration de code Lua directement dans les templates.
-- La possibilité d'enrichir Plume avec des bibliothèques Lua supplémentaires.
+- La possibilité d'enrichir Wings avec des bibliothèques Lua supplémentaires.
 
 
 ## Installation
-Plume est écrit en Lua et compatible avec les versions de 5.1 à 5.4, ainsi que luajit.
+Wings est écrit en Lua et compatible avec les versions de 5.1 à 5.4, ainsi que luajit.
 
 ## Utilisation basique
 Pour ceux qui débutent en Lua ou qui ne sont pas familiers avec les langages de scripting, veuillez suivre cette section. Les utilisateurs expérimentés en Lua peuvent passer directement à la section avancée.
@@ -40,12 +40,12 @@ Tout texte écrit sans commande spéciale sera produit tel quel dans le document
 
 
 Entrée:
-``` plume
+``` wings
 foo
 ```
 
 Sortie
-``` plume
+``` wings
 foo
 ```
 
@@ -54,19 +54,19 @@ Les macros permettent d'encapsuler et de réutiliser des fragments de texte ou d
 
 Exemple d'utilisation d'une macro simple :
 Entrée :
-``` plume
+``` wings
 #macro auteur Jean Dupont #end
 Cet article a été écrit par #auteur.
 ```
 
 Sortie :
-``` plume
+``` wings
 Cet article a été écrit par Jean Dupont
 ```
 
-Il est à noter que tous les éléments de la syntaxe Plume commencent par le symbole dièse (#). Pour définir une macro, on utilise la forme suivante :
+Il est à noter que tous les éléments de la syntaxe Wings commencent par le symbole dièse (#). Pour définir une macro, on utilise la forme suivante :
 
-``` plume
+``` wings
 #macro nom_de_la_macro
   texte de remplacement
 #end
@@ -74,17 +74,17 @@ Il est à noter que tous les éléments de la syntaxe Plume commencent par le sy
 
 Cette macro peut être déclarée sur une ligne unique, comme montré dans l'exemple précédent. Pour utiliser la macro dans votre texte, vous écrivez simplement :
 
-``` plume
+``` wings
 #nom_de_la_macro
 ```
 
 ### Paramètres de macro
-Une macro statique peut s'avérer limitée pour certains besoins. Heureusement, Plume permet l'ajout de paramètres aux macros pour une plus grande flexibilité :
+Une macro statique peut s'avérer limitée pour certains besoins. Heureusement, Wings permet l'ajout de paramètres aux macros pour une plus grande flexibilité :
 
 Exemple avec des paramètres :
 
 Entrée :
-``` plume
+``` wings
 #macro double(x)
   #x #x
 #end
@@ -92,13 +92,13 @@ Entrée :
 ```
 
 Sortie :
-``` plume
+``` wings
 Cette phrase est écrite deux fois Cette phrase est écrite deux fois
 ```
 
 Une alternative pour le même résultat serait :
 
-``` plume
+``` wings
 #double(x=Cette phrase est écrite deux fois)
 ```
 
@@ -109,20 +109,20 @@ Une macro peut contenir de multiples paramètres, il suffit de les séparer par 
 Exemple avec plusieurs paramètres :
 
 Entrée :
-``` plume
+``` wings
 #macro concat3(x, y, z) #x-#y-#z #end
 #concat3(a, b, c)
 ```
 
 Sortie :
-``` plume
+``` wings
 a-b-c
 ```
 
 ### Paramètres par défaut
 On peut vouloir que certain arguments soient falcutatifs. Si l'utilisateur ne les fournit pas, une valeur par défaut est alors utilisée.
 Entrée :
-``` plume
+``` wings
 #macro prefix_name (word, prefix=M.)
   #prefix #word
 #end
@@ -131,7 +131,7 @@ Entrée :
 ```
 
 Sortie :
-``` plume
+``` wings
 M. Dupont
 Mdm Dupont
 ```
@@ -139,75 +139,75 @@ Mdm Dupont
 ### Inclure un autre fichier
 Vous pouvez inclure dans votre document n'importe quel fichier en utilisant les macros #import et #include.
 
-La macro #import sert à inclure des fichier plume, alors que #include copie le contenue d'un fichier sans l'executer.
+La macro #import sert à inclure des fichier wings, alors que #include copie le contenue d'un fichier sans l'executer.
 
 ### Librairies externes
-Des utilisateurs peuvent ajouter des fonctionnalités à Plume (cf la section "Utilisation Avancée").
+Des utilisateurs peuvent ajouter des fonctionnalités à Wings (cf la section "Utilisation Avancée").
 Vous pouvez inclure leur travail dans votre document :
-  - Copier leurs fichiers à l'intérieur du dossier "lib" de l'instalation de Plume ou directement à côté de votre document.
+  - Copier leurs fichiers à l'intérieur du dossier "lib" de l'instalation de Wings ou directement à côté de votre document.
   - Ecrire au début de votre fichier : ```#import(nom de la lib)```
 
 ### Répéter un bloc de texte
 Si vous avez besoin de répéter une ligne ou un bloc de texte, vous pouvez utiliser la construction #for ... #do ... #end.
 
 Entrée :
-``` plume
+``` wings
 #for i=1, 3 #do
   Ceci est la ligne #i.
 #end
 ```
 
 Sortie :
-``` plume
+``` wings
 Ceci est la ligne 1.
 Ceci est la ligne 2.
 Ceci est la ligne 3.
 ```
 
 ## Utilisation avancée
-Vous avez découvert les usages basique de Plume. Ils seront suffisant dans beaucoup de cas, mais il est possible de faire beaucoup plus.
+Vous avez découvert les usages basique de Wings. Ils seront suffisant dans beaucoup de cas, mais il est possible de faire beaucoup plus.
 
 Une connaissance du langage Lua aidera grandement à comprendre cette section.
 
-### Fonctionnement de Plume
-En interne, Plume transpile le document en un fichier Lua, puis execute ce dernier.
-En comprenant comment fonctionnent cette transpilation, vous pouvez faire avec Plume tout ce que vous pouvez faire avec Lua.
+### Fonctionnement de Wings
+En interne, Wings transpile le document en un fichier Lua, puis execute ce dernier.
+En comprenant comment fonctionnent cette transpilation, vous pouvez faire avec Wings tout ce que vous pouvez faire avec Lua.
 
 
 ### Mode texte, mode lua
-Lorsque Plume parcout le document afin de le transpiler, il sépare le code en trois catégories :
+Lorsque Wings parcout le document afin de le transpiler, il sépare le code en trois catégories :
   - Les éléments de contrôle (commencant par un '#')
   - Le texte, qui sera affiché tel quel dans la sortie finale.
   - Le code Lua, qui sera gardé tel quel dans le fichier transpilé.
 
 Par exemple, dans le code suivant:
-``` plume
+``` wings
 #for i=1, 3 #do
   Ceci est une ligne!
 #end
 ```
 
-  - #for, #do et #end sont des éléments de controle. Ils permettent à Plume de créer et de délimiter une boucle "for".
+  - #for, #do et #end sont des éléments de controle. Ils permettent à Wings de créer et de délimiter une boucle "for".
   - "Ceci est une ligne!" est du texte. Il apparaitra sans modification dans le fichier de sortie.
-  - "i=1, 3" est le code Lua qui contrôle l'execution de la boucle for. Il sera écrit tel quel dans le code transpilé ; vous pouvez en fait écrire ce que vous voulez. Si vous écrivez du code invalide, ce n'est pas Plume qui affichera un message d'erreur, mais Lua.
+  - "i=1, 3" est le code Lua qui contrôle l'execution de la boucle for. Il sera écrit tel quel dans le code transpilé ; vous pouvez en fait écrire ce que vous voulez. Si vous écrivez du code invalide, ce n'est pas Wings qui affichera un message d'erreur, mais Lua.
 
 D'où le code Lua:
 ```lua
-plume:push ()
+wings:push ()
 
 
 -- line 1 : #for i=1, 3 #do
 for i=1, 3 do
 
     -- line 2 : Ceci est une ligne!
-    plume:write 'Ceci est une ligne!'
-    plume:write '\n'
+    wings:write 'Ceci est une ligne!'
+    wings:write '\n'
 
 -- line 3 : #end
 end
 
 
-return plume:pop ()
+return wings:pop ()
 ```
 
 ### Variables et mots-clefs
@@ -218,27 +218,27 @@ Si i est une variable lua, ```#i``` écrira la valeur de i dans le fichier de so
 Si i prend des arguments, vous pouvez les indiquer : ```#i(foo, bar)```.
 
 ### Structures de contrôle
-Avec Plume, vous pouvez utiliser les boucles for et while ainsi que la structure if.
+Avec Wings, vous pouvez utiliser les boucles for et while ainsi que la structure if.
 Ils ont tous une construction similaire:
-``` plume
+``` wings
 #for [lua iterator] #do
   [texte]
 #end
 ```
 
-``` plume
+``` wings
 #while [lua condition] #do
   [texte]
 #end
 ```
 
-``` plume
+``` wings
 #if [lua condition] #then
   [texte]
 #end
 ```
 
-``` plume
+``` wings
 #if [lua condition] #then
   [texte]
 #else
@@ -246,7 +246,7 @@ Ils ont tous une construction similaire:
 #end
 ```
 
-``` plume
+``` wings
 #if [lua condition] #then
   [texte]
 #elseif [lua condition] #then
@@ -265,34 +265,34 @@ Par soucis de légèreté, on peut également utiliser cette syntaxe pour les af
 
 #### Lua-block
 Pour exectuer des statements, il faut utiliser la syntaxe
-``` plume
+``` wings
 #lua
   [lua code]
 #end
 ```
 
 Attention, cela n'écrira rien dans le fichier final.
-Pour écrire quelque chose, vous devrez utiliser la fonction plume.write (pour plus de détail, consulter Usage Expert > API)
+Pour écrire quelque chose, vous devrez utiliser la fonction wings.write (pour plus de détail, consulter Usage Expert > API)
 
-``` plume
+``` wings
 #lua
-  plume:write(1+1)
+  wings:write(1+1)
 #end
 ```
 
 Donne le même résultat que
-``` plume
+``` wings
 #(1+1)
 ```
 
 ### Déclarer des fonctions
-``` plume
+``` wings
 #macro name(arguments)
   [text]
 #end
 ```
 
-``` plume
+``` wings
 #function name(arguments)
   [lua code]
   return result
@@ -303,26 +303,26 @@ S'ils n'y a pas d'arguments, les parenthèses sont optionnelles.
 Choississez #function uniquement si votre fonction ne contient pas, ou presque, de texte. Sinon, utilisez #macro, éventuellement avec #lua ou #().
 
 Attention : 
-``` plume
+``` wings
 #function foo(x)
   return "bar" .. x
 #end
 #foo(bar)
 ```
 et
-``` plume
+``` wings
 #(foo = function(x)
   return "bar" .. x
 end)
 #foo(bar)
 ```
-Ne sont pas équivalents (le deuxième causera même une erreur), à cause du support des paramètres nommés : dans le premier cas, Plume s'en occupe automatiquement. Dans le deuxième, c'est à vous de le faire manuellement. (se réfèrer à la section "Utilisation Experte").
+Ne sont pas équivalents (le deuxième causera même une erreur), à cause du support des paramètres nommés : dans le premier cas, Wings s'en occupe automatiquement. Dans le deuxième, c'est à vous de le faire manuellement. (se réfèrer à la section "Utilisation Experte").
 
 ### Paramètres positionels, paramètres nommés, valeurs par défaut
 I
 
 ### Conversion de paramètres
-Les paramètres donné à une fonction à travers plume ne sont pas des chaînes de caractères, mais des TokenList. Cela permet une introspection poussée (cf la section "Usage Expert"), mais rend une conversion obligatoire si vous en avez besoin comme nombres ou chaîne de caractère.
+Les paramètres donné à une fonction à travers wings ne sont pas des chaînes de caractères, mais des TokenList. Cela permet une introspection poussée (cf la section "Usage Expert"), mais rend une conversion obligatoire si vous en avez besoin comme nombres ou chaîne de caractère.
 Utilisez pour cela TokenList:tostring et TokenList:tonumber.
 
 Par soucis de légèreté, la converstion sera automatique en cas de concaténation ou d'opération arithmétique.
@@ -330,13 +330,13 @@ Par soucis de légèreté, la converstion sera automatique en cas de concaténat
 ### Structure begin
 Prenons une macro ```document```, censé contenir l'intégralité de votre texte.
 Plutôt que d'écrire
-``` plume
+``` wings
 #document(
   ...
 )
 ```
 Ce qui est peu lisible en cas d'imbrication et interdit l'usage des virgules (en effet, les virgules seront comprises comme des séparateurs de paramètre), il est possible d'utiliser la synaxe suivante:
-``` plume
+``` wings
 #begin document
   ...
 #end
@@ -344,7 +344,7 @@ Ce qui est peu lisible en cas d'imbrication et interdit l'usage des virgules (en
 
 Si document a besoin de d'autres paramètres :
 
-``` plume
+``` wings
 #begin document(arg1, arg2, ...)
   ...
 #end
@@ -357,7 +357,7 @@ Tout ce qui se situe entre #begin et #end sera considéré comme le premier argu
 #### import
 #### include
 ### Echapper des caractères
-Il n'y a pas de caractère d'échappement en Plume.
+Il n'y a pas de caractère d'échappement en Wings.
 Si cela vous pose vraiment problème, deux solutions:
 - Mettre le texte fautif dans un fichier et utiliser ```#include```
 - Utilier une structure lua-inline : ```#("#for")```
@@ -369,29 +369,30 @@ Si cela vous pose vraiment problème, deux solutions:
 ### Token
 ### TokenList
 ### API
-#### plume:transpile ()
-#### plume:render ()
-#### plume:write ()
-#### plume:push ()
-#### plume:pop ()
+#### wings:transpile ()
+#### wings:render ()
+#### wings:write ()
+#### wings:push ()
+#### wings:pop ()
 
 ## Performances
-Plume est certainement plutôt lent :
+Wings est certainement plutôt lent :
   - Etape de transpilation
   - Appel de macro plutôt lourd
   - Lua n'est pas très bon avec les chaînes de caractère
 
-Dans le futur, je ferais des tests pour avoir une idée claire des performances de Plume, et si besoin de l'optimiser.
+Dans le futur, je ferais des tests pour avoir une idée claire des performances de Wings, et si besoin de l'optimiser.
 
 ## Futures fonctionnalités
-### Version 1.1
-Vérication effectués par le transpiler :
-  - Est-ce qu'il y a bien un #end pour chaque #for / #if / ...
-  - Est-ce qu'il y a bien un #then après un #if, et non un #do...
-  - Est-ce que les noms de macros / variables sont des identifiants lua valides
+### Prioritaires
+  - Vérication effectués par le transpiler :
+    - Est-ce qu'il y a bien un #end pour chaque #for / #if / ...
+    - Est-ce qu'il y a bien un #then après un #if, et non un #do...
+    - Est-ce que les noms de macros / variables sont des identifiants lua valides
+  - Modifier les exentions par défauts des fichiers wings
 
-### Version 1.2 et après
-  - Permettre à l'utilisateur de modifier la syntaxe de Plume
+### Non prioritaires
+  - Permettre à l'utilisateur de modifier la syntaxe de Wings
   - Donner un moyen simple d'utiliser des librairires lua externes
   - Déclarer des macros locales
   - Mots-clefs #do et #repeat
@@ -405,4 +406,4 @@ Vérication effectués par le transpiler :
   - Gestion des caractères à échapper.
 
 ## License
-Plume est distribuée sous license GNU/GPL.
+Wings est distribuée sous license GNU/GPL.

@@ -2,7 +2,7 @@
 #VERSION
 Copyright (C) 2023  Erwan Barbedor
 
-Check https://github.com/ErwanBarbedor/LuaPlume
+Check https://github.com/ErwanBarbedor/Wings Script
 for documentation, tutorial or to report issues.
 
 This program is free software: you can redistribute it and/or modify
@@ -18,15 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local Plume = {}
+local Wings = {}
 
-Plume._VERSION = "#VERSION"
+Wings._VERSION = "#VERSION"
 
 -- <TO REMOVE
 -- Utils function to split main file in chunck.
 -- Only for developement purpose, will not be part of the final file.
 local function include (name)
-    local env = setmetatable({Plume=Plume}, {__index=_G})
+    local env = setmetatable({Wings=Wings}, {__index=_G})
     local script, err = loadfile (debug.getinfo(2, "S").source:sub(2):gsub('[^\\/]*$', '') .. name..'.lua', "t", env)
     if not script then
         error('Include file "' .. name .. '" : \n' .. err)
@@ -40,39 +40,39 @@ end
 
 include 'utils'
 
-Plume.transpiler = {}
+Wings.transpiler = {}
 include 'patterns'
 include 'transpile'
 include 'engine'
 include 'token'
-Plume.std = {}
+Wings.std = {}
 include 'std'
 
 
-function Plume:new ()
-    -- Create Plume interpreter instance.
+function Wings:new ()
+    -- Create Wings interpreter instance.
     -- Each instance has it's own environnement and configuration.
 
-    local plume = Plume.utils.copy (Plume)
+    local wings = Wings.utils.copy (Wings)
 
     -- Create a new environment
-    plume.env = {
-        plume=plume
+    wings.env = {
+        wings=wings
     }
 
     -- Inherit from package.path
-    plume.path=package.path:gsub('%.lua', '.plume')
+    wings.path=package.path:gsub('%.lua', '.wings')
     -- Stack used for managing nested constructs
-    plume.stack = {}
+    wings.stack = {}
     -- Track differents files rendered in the same instance
-    plume.filestack = {}
-    -- Activate/desactivate error handling by plume.
-    plume.PLUME_ERROR_HANDLING = false
+    wings.filestack = {}
+    -- Activate/desactivate error handling by wings.
+    wings.PLUME_ERROR_HANDLING = false
     
-    plume.type = "plume"
-    plume.transpiler:compile_patterns ()
+    wings.type = "wings"
+    wings.transpiler:compile_patterns ()
 
-    -- Populate plume.env with lua and plume defaut functions
+    -- Populate wings.env with lua and wings defaut functions
     local version
     if jit then
         version = "jit"
@@ -80,18 +80,18 @@ function Plume:new ()
         version = _VERSION:match('[0-9]%.[0-9]$')
     end
 
-    for name in Plume.utils.LUA_STD_FUNCTION[version]:gmatch('%S+') do
-        plume.env[name] = _G[name]
+    for name in Wings.utils.LUA_STD_FUNCTION[version]:gmatch('%S+') do
+        wings.env[name] = _G[name]
     end
 
-    for name, f in pairs(Plume.std) do
-        plume.env[name] = function (...) return f (plume, ...) end
+    for name, f in pairs(Wings.std) do
+        wings.env[name] = function (...) return f (wings, ...) end
     end
 
-    return plume
+    return wings
 end
 
-function Plume:render(code, filename)
+function Wings:render(code, filename)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
@@ -99,9 +99,9 @@ function Plume:render(code, filename)
     table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
 
     if filename then
-        name = filename .. ".plume"
+        name = filename .. ".wings"
     else
-        name = '<internal-'..#self.filestack..'.plume>'
+        name = '<internal-'..#self.filestack..'.wings>'
     end
 
     local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
@@ -132,7 +132,7 @@ function Plume:render(code, filename)
     return result
 end
 
-function Plume:renderFile (path)
+function Wings:renderFile (path)
     -- Too automaticaly read the file and pass the name to render
     local file = io.open(path)
 
@@ -143,4 +143,4 @@ function Plume:renderFile (path)
     return self:render(file:read"*a", path)
 end
 
-return Plume
+return Wings

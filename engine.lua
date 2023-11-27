@@ -1,20 +1,20 @@
---[[This file is part of LuaPlume.
+--[[This file is part of Wings Script.
 
-LuaPlume is free software: you can redistribute it and/or modify
+Wings Script is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
 
-LuaPlume is distributed in the hope that it will be useful,
+Wings Script is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with Wings Script. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- Functions used by Plume in the final code to manage text flow and macro calls.
+-- Functions used by Wings in the final code to manage text flow and macro calls.
 
-function Plume:write (x)
+function Wings:write (x)
     -- Add a value to the output.
     if type(x) == "table" then
         if x.type == "token" then
@@ -31,20 +31,20 @@ function Plume:write (x)
     end
 end
 
-function Plume:push ()
+function Wings:push ()
     -- Adds a new TokenList to the stack.
     -- This TokenList will receive all output tokens from now.
     table.insert(self.stack, self:TokenList ())
 end
 
-function Plume:pop ()
+function Wings:pop ()
     -- Removes a TokenList from the stack.
     -- It will either be written to the parent, or returned as the final value.
     -- (possibly after being passed to a function).
     return table.remove(self.stack)
 end
 
-function Plume:make_args_list (given_args, info)
+function Wings:make_args_list (given_args, info)
     -- From a call with mixed positional and named arguments,
     -- make a lua-valid argument list.
     -- If not "info", return the positional args
@@ -109,10 +109,10 @@ function Plume:make_args_list (given_args, info)
     return (unpack or table.unpack) (args, 1, #info)
 end
 
-function Plume:format_error (err)
-    -- Clean traceback from intern plume call
+function Wings:format_error (err)
+    -- Clean traceback from intern wings call
     -- Convert the line number from the internal lua file
-    -- that is executed to the original plume file
+    -- that is executed to the original wings file
     local err_msg   = err
     local traceback = debug.traceback()
 
@@ -124,14 +124,14 @@ function Plume:format_error (err)
     traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
 
     traceback = traceback:gsub('[^\n]*\n?', function (...)
-        return plume.utils.convert_noline (plume.filestack[#plume.filestack].luacode, ...)
+        return wings.utils.convert_noline (wings.filestack[#wings.filestack].luacode, ...)
     end)
 
     return traceback
-    -- error('#VERSION: ' .. name .. ':' .. noline_plume .. ':' .. err)
+    -- error('#VERSION: ' .. name .. ':' .. noline_wings .. ':' .. err)
 end
 
-function Plume:filename ()
+function Wings:filename ()
     local top = self.filestack[#self.filestack]
     if not top then
         error ("Not file running.")
@@ -139,7 +139,7 @@ function Plume:filename ()
     return top.filename
 end
 
-function Plume:dirname ()
+function Wings:dirname ()
     local filename = self:filename ()
     return filename and filename:gsub('[^/]*$', '')
 end

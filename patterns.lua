@@ -1,22 +1,22 @@
---[[This file is part of LuaPlume.
+--[[This file is part of Wings Script.
 
-LuaPlume is free software: you can redistribute it and/or modify
+Wings Script is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
 
-LuaPlume is distributed in the hope that it will be useful,
+Wings Script is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with Wings Script. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
 -- Configuration for the transpiler.
 -- Modifying these values is theoretically possible,
 -- but has not yet been tested.
 
-Plume.transpiler.patterns = {
+Wings.transpiler.patterns = {
     -- Only for output lua lisibility
     indent                 = "    ",
 
@@ -34,11 +34,11 @@ Plume.transpiler.patterns = {
     arg_separator          = ",",
     comment                = "-",
     -- A prefix for make certain name invalid for
-    -- an plume identifier.
+    -- an wings identifier.
     special_name_prefix    = "!"
 }
 
-function Plume.transpiler:compile_patterns ()
+function Wings.transpiler:compile_patterns ()
     -- capture, capture_call and capture_inline_lua divide the line in 3 parts.
     -- Before the token, token itself, after the token.
 

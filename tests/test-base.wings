@@ -67,7 +67,7 @@ foo
 #-- END
 
 #-- TEST : include
-#include(lib.plume)
+#include(lib.wings)
 #-- RESULT
 #macro foo bar #end
 #-- END

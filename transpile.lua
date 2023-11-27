@@ -1,24 +1,24 @@
---[[This file is part of LuaPlume.
+--[[This file is part of Wings Script.
 
-LuaPlume is free software: you can redistribute it and/or modify
+Wings Script is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
 
-LuaPlume is distributed in the hope that it will be useful,
+Wings Script is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with LuaPlume. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with Wings Script. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-function Plume.transpiler:check_lua_identifier ()
+function Wings.transpiler:check_lua_identifier ()
 end
 
-function Plume.transpiler:transpile (code)
-    -- Define a method to transpile Plume code into Lua
+function Wings.transpiler:transpile (code)
+    -- Define a method to transpile Wings code into Lua
 
-    -- Table to hold code chuncks, one chunck by Plume line.
+    -- Table to hold code chuncks, one chunck by Wings line.
     self.chuncks = {}
 
     -- Current chunck being processed
@@ -97,19 +97,19 @@ function Plume.transpiler:transpile (code)
         table.insert(self.chuncks, self.line)
     end
 
-    return "plume:push ()\n\n" .. table.concat (self.chuncks, '') .. "\n\nreturn plume:pop ()"
+    return "wings:push ()\n\n" .. table.concat (self.chuncks, '') .. "\n\nreturn wings:pop ()"
 end
 
--- All these auxiliary functions may not be calling outside Plume.transpiler.transpile
+-- All these auxiliary functions may not be calling outside Wings.transpiler.transpile
 
 -- Utils
-function Plume.transpiler:escape_string (s)
+function Wings.transpiler:escape_string (s)
     -- Make a valid lua string
     return "'" .. s:gsub("'", "\\'")
                    :gsub("\n", "\\n") .. "'"
 end
 
-function Plume.transpiler:extract_args (args)
+function Wings.transpiler:extract_args (args)
     -- when declaring a function or a macro, extract postional and named arguments informations.
     args = args:sub(2, -2)
     
@@ -136,7 +136,7 @@ function Plume.transpiler:extract_args (args)
         '{' .. table.concat(infos, ', ') .. '}'
 end
 
-function Plume.transpiler:split_line ()
+function Wings.transpiler:split_line ()
     local before, capture, after
     if self.top.lua then
         if self.top.name == "lua-inline" then
@@ -153,28 +153,28 @@ function Plume.transpiler:split_line ()
 end
 
 -- Indentation
-function Plume.transpiler:increment_indent ()
+function Wings.transpiler:increment_indent ()
     self.indent = self.indent .. self.patterns.indent
 end
 
-function Plume.transpiler:decrement_indent ()
+function Wings.transpiler:decrement_indent ()
     self.indent = self.indent:gsub(self.patterns.indent .. '$', '')
 end
 
 -- All 'write' functions don't modify the line 
-function Plume.transpiler:write_text (s)
-    -- Handle text that may be added to the output by Plume
+function Wings.transpiler:write_text (s)
+    -- Handle text that may be added to the output by Wings
     if #s > 0 then
         table.insert(
             self.chunck, 
             '\n'.. self.indent
-                .. "plume:write "
+                .. "wings:write "
                 .. self:escape_string (s)
         )
     end
 end
 
-function Plume.transpiler:write_lua (s, toindent)
+function Wings.transpiler:write_lua (s, toindent)
     -- Handle text that are raw lua code
     if toindent then
         s = self.indent .. s
@@ -182,45 +182,45 @@ function Plume.transpiler:write_lua (s, toindent)
     table.insert(self.chunck, s)
 end
 
-function Plume.transpiler:write_variable(s)
-    -- Handle variable that may be added to the output by Plume
+function Wings.transpiler:write_variable(s)
+    -- Handle variable that may be added to the output by Wings
     if #s > 0 then
-        table.insert(self.chunck, '\n'.. self.indent .. "plume:write (" .. s .. ")")
+        table.insert(self.chunck, '\n'.. self.indent .. "wings:write (" .. s .. ")")
     end
 end
 
 -- Manage function call
-function Plume.transpiler:write_functioncall_begin (s)
+function Wings.transpiler:write_functioncall_begin (s)
     -- write the begin of a function call : give the function name,
     -- open a table brace for containing incomings arguments.
-    table.insert(self.chunck, '\n' .. self.indent .. 'plume:write(' .. s .. ' {')
+    table.insert(self.chunck, '\n' .. self.indent .. 'wings:write(' .. s .. ' {')
     self:increment_indent ()
 end
 
-function Plume.transpiler:write_functioncall_end ()
+function Wings.transpiler:write_functioncall_end ()
     -- write the end of a function call : closing braces
     self:decrement_indent ()
     table.insert(self.chunck, '\n' .. self.indent .. '})')
 end
 
-function Plume.transpiler:write_functioncall_arg_begin (name)
+function Wings.transpiler:write_functioncall_arg_begin (name)
     -- write the begining of a argument : a function to encompass the argument body.
     -- name must be a valid lua key following by a '='
     table.insert(self.chunck, '\n' .. self.indent .. (name or '') .. '(function()')
     self:increment_indent ()
-    table.insert(self.chunck, '\n' .. self.indent .. 'plume:push()')
+    table.insert(self.chunck, '\n' .. self.indent .. 'wings:push()')
 end
 
-function Plume.transpiler:write_functioncall_arg_end ()
+function Wings.transpiler:write_functioncall_arg_end ()
     -- Closing args function
-    table.insert(self.chunck, '\n' .. self.indent .. 'return plume:pop()')
+    table.insert(self.chunck, '\n' .. self.indent .. 'return wings:pop()')
     self:decrement_indent ()
     table.insert(self.chunck, '\n' .. self.indent .. 'end)()')
     self:increment_indent ()
 end
 
 -- capture function modify the line
-function Plume.transpiler:capture_functioncall_named_arg ()
+function Wings.transpiler:capture_functioncall_named_arg ()
     -- In the begining of an argument, check if it is a named argument.
 
     local name = self.line:match('^%s*%w+=')
@@ -232,8 +232,8 @@ function Plume.transpiler:capture_functioncall_named_arg ()
     return name
 end
 
-function Plume.transpiler:capture_syntax_feature (capture)
-    -- Handle Plume syntax.
+function Wings.transpiler:capture_syntax_feature (capture)
+    -- Handle Wings syntax.
     -- Return true is the line loop must be stop
 
     -- The command could be keyword, a commentary or an opening.
@@ -267,14 +267,14 @@ function Plume.transpiler:capture_syntax_feature (capture)
         -- this is lua code
         self:handle_lua_code (command)
     else
-        -- this is plume code
-        return self:handle_plume_code (command)
+        -- this is wings code
+        return self:handle_wings_code (command)
     end
 
     return false
 end
 
-function Plume.transpiler:handle_inside_call (command)
+function Wings.transpiler:handle_inside_call (command)
 
     -- check brace nested deep
     if command == self.patterns.open_call then
@@ -320,7 +320,7 @@ function Plume.transpiler:handle_inside_call (command)
     end
 end
 
-function Plume.transpiler:handle_lua_code (command)
+function Wings.transpiler:handle_lua_code (command)
     -- We are inside lua code. The only keyword allowed are "do, then, end" and
     -- are closing.
     if command == "end" and self.top.name == "lua" then
@@ -349,8 +349,8 @@ function Plume.transpiler:handle_lua_code (command)
     end
 end
 
-function Plume.transpiler:handle_plume_code (command)
-    -- We are inside Plume code and no call to manage.
+function Wings.transpiler:handle_wings_code (command)
+    -- We are inside Wings code and no call to manage.
     -- Manage each of allowed keyword and macro/function call
     
     -- Open raw lua code chunck
@@ -386,7 +386,7 @@ function Plume.transpiler:handle_plume_code (command)
             self.line = self.line:sub(#declaration+1, -1)
             self:write_lua (declaration)
         else
-            self:write_lua ('\n' .. self.indent .. 'plume:write (')
+            self:write_lua ('\n' .. self.indent .. 'wings:write (')
             self.pure_lua_line = false
         end
         
@@ -403,7 +403,7 @@ function Plume.transpiler:handle_plume_code (command)
     end
 end
 
-function Plume.transpiler:handle_new_function (ismacro)
+function Wings.transpiler:handle_new_function (ismacro)
     -- Declare a new function. If is not a macro, open a lua code chunck
     local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
     self.line = self.line:sub((#space+#name)+1, -1)
@@ -424,27 +424,27 @@ function Plume.transpiler:handle_new_function (ismacro)
         self:write_lua ('\n' .. self.indent .. 'args = nil')
     else
         -- Dont polluate environnement with a new variable "args"
-        self:write_lua ('\n' .. self.indent .. 'plume._args = args')
+        self:write_lua ('\n' .. self.indent .. 'wings._args = args')
         self:write_lua ('\n' .. self.indent .. 'args = nil')
 
         self:write_lua ('\n' .. self.indent
                         .. 'local ' .. args_name:sub(2, -2)
-                        .. ' = plume:make_args_list (plume._args, ' .. args_info ..')')
-        self:write_lua ('\n' .. self.indent .. 'plume._args = nil')
+                        .. ' = wings:make_args_list (wings._args, ' .. args_info ..')')
+        self:write_lua ('\n' .. self.indent .. 'wings._args = nil')
     end
 
     if ismacro then
-        self:write_lua ('\n' .. self.indent .. 'plume:push()')
+        self:write_lua ('\n' .. self.indent .. 'wings:push()')
         table.insert(self.stack, {name="macro", args=args_info, fname=name, line=self.noline})
     else
         table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name, line=self.noline})
     end     
 end
 
-function Plume.transpiler:handle_end_keyword ()
+function Wings.transpiler:handle_end_keyword ()
     table.remove(self.stack)
     if self.top.name == 'macro' then
-        self:write_lua ('\n' .. self.indent .. 'return plume:pop ()')
+        self:write_lua ('\n' .. self.indent .. 'return wings:pop ()')
     end
 
     if self.top.name == "begin-sugar" then
@@ -457,7 +457,7 @@ function Plume.transpiler:handle_end_keyword ()
     end
 end
 
-function Plume.transpiler:handle_macro_call (command)
+function Wings.transpiler:handle_macro_call (command)
     local is_begin_sugar
     if command == "begin" then
         is_begin_sugar = true
