@@ -1,5 +1,5 @@
 --[[
-Wings v0.1-alpha-1701198883
+Wings v0.1-alpha-1701198893
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Wings = {}
 
-Wings._VERSION = "Wings v0.1-alpha-1701198883"
+Wings._VERSION = "Wings v0.1-alpha-1701198893"
 
 
 Wings.utils = {}

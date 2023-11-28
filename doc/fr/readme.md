@@ -31,11 +31,11 @@ Wings est écrit en Lua et compatible avec les versions de 5.1 à 5.4, ainsi que
 
 ## Apprendre Wings
 
-Si vous ne connaissez pas le langage Lua ou souhaitez juste des informations simples sur Wings, suivez ce [tutoriel](#https://github.com/ErwanBarbedor/LuaWingsScript/blob/master/doc/fr/tutorial-luabeginner.md)
+Si vous ne connaissez pas le langage Lua ou souhaitez juste des informations simples sur Wings, suivez ce [tutoriel](doc/fr/tutorial-luabeginner.md)
 
-Pour un tutoriel un peu plus avancé : [ici](#https://github.com/ErwanBarbedor/LuaWingsScript/blob/master/doc/fr/tutorial.md) puis [ici](#https://github.com/ErwanBarbedor/LuaWingsScript/blob/master/doc/fr/tutorial-expert.md).
+Pour un tutoriel un peu plus avancé : [ici](doc/fr/tutorial.md) puis [ici](doc/fr/tutorial-expert.md).
 
-Pour se renseigner l'API [c'est ici](#https://github.com/ErwanBarbedor/LuaWingsScript/blob/master/doc/fr/api.md)
+Pour se renseigner l'API [c'est ici](doc/fr/api.md)
 
 
 ## Performances
