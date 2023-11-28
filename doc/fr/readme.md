@@ -53,6 +53,9 @@ Dans le futur, je ferais des tests pour avoir une idée claire des performances 
     - Est-ce qu'il y a bien un #then après un #if, et non un #do...
     - Est-ce que les noms de macros / variables sont des identifiants lua valides
   - Modifier les exentions par défauts des fichiers wings
+  - Tracer l'erreurs à travers plusieurs fichiers
+  - Avoir des tests unitaires pour les erreurs
+  - Appeler wings.lua en ligne de commande
 
 ### Non prioritaires
   - Permettre à l'utilisateur de modifier la syntaxe de Wings
@@ -60,7 +63,7 @@ Dans le futur, je ferais des tests pour avoir une idée claire des performances 
   - Déclarer des macros locales
   - Mots-clefs #do et #repeat
   - Rendre l'usage des TokenList flexible
-  - Réfléchir aux performances et, si besoin
+  - Réfléchir aux performances et, si besoin, optimiser.
 
 ### En réflexion
   - Permettre à l'utilisateur d'étendre la syntaxe du transpileur (exemple : ```#alias oldname newname```) autrement que via des macros.
