@@ -16,7 +16,7 @@ print("Creating wings.lua...")
 -- Merge all wings code into a single standalone file
 local wings   = io.open 'main.lua':read '*a'
 local version = 'Wings v0.1'
-local alpha   = true
+local alpha   = false
 
 if alpha then
     version = version .. "-alpha-" .. os.time ()
