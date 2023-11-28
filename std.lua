@@ -28,7 +28,7 @@ function Wings.std.import(wings, args)
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
 
-    for path in wings.path:gmatch('[^;]+') do
+    for _, path in ipairs(wings.package.path) do
         local path = path:gsub('?', name)
         file = io.open(path)
         if file then

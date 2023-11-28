@@ -1,5 +1,5 @@
 --[[
-Wings v0.1-alpha-1701198893
+Wings v0.1-alpha-1701200063
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -20,7 +20,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local Wings = {}
 
-Wings._VERSION = "Wings v0.1-alpha-1701198893"
+Wings._VERSION = "Wings v0.1-alpha-1701200063"
+
+Wings.config = {}
+Wings.config.extensions = {'wings'}
 
 
 Wings.utils = {}
@@ -872,7 +875,7 @@ function Wings.std.import(wings, args)
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
 
-    for path in wings.path:gmatch('[^;]+') do
+    for _, path in ipairs(wings.package.path) do
         local path = path:gsub('?', name)
         file = io.open(path)
         if file then
@@ -920,7 +923,15 @@ function Wings:new ()
     }
 
     -- Inherit from package.path
-    wings.path=package.path:gsub('%.lua', '.wings')
+    wings.package = {}
+    wings.package.path= {}
+    for path in package.path:gmatch('[^;]+') do
+        for _, ext in ipairs(wings.config.extensions) do
+            local path = path:gsub('%.lua$', '.' .. ext)
+            table.insert(wings.package.path, path)
+        end
+    end
+    
     -- Stack used for managing nested constructs
     wings.stack = {}
     -- Track differents files rendered in the same instance

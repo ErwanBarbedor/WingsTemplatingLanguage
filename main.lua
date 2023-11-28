@@ -22,6 +22,9 @@ local Wings = {}
 
 Wings._VERSION = "#VERSION"
 
+Wings.config = {}
+Wings.config.extensions = {'wings'}
+
 -- <TO REMOVE
 -- Utils function to split main file in chunck.
 -- Only for developement purpose, will not be part of the final file.
@@ -61,7 +64,15 @@ function Wings:new ()
     }
 
     -- Inherit from package.path
-    wings.path=package.path:gsub('%.lua', '.wings')
+    wings.package = {}
+    wings.package.path= {}
+    for path in package.path:gmatch('[^;]+') do
+        for _, ext in ipairs(wings.config.extensions) do
+            local path = path:gsub('%.lua$', '.' .. ext)
+            table.insert(wings.package.path, path)
+        end
+    end
+    
     -- Stack used for managing nested constructs
     wings.stack = {}
     -- Track differents files rendered in the same instance
