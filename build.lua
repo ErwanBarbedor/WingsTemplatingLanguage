@@ -15,11 +15,17 @@ You should have received a copy of the GNU General Public License along with Win
 print("Creating wings.lua...")
 -- Merge all wings code into a single standalone file
 local wings   = io.open 'main.lua':read '*a'
-local version = 'Wings v0.1'
-local alpha   = false
+local version = 'Wings v0.1.0'
+local dev   = true
+local devn = 6
 
-if alpha then
-    version = version .. "-alpha-" .. os.time ()
+-- If in developpement, make the version number unic.
+if dev then
+    version = version .. "-dev (build " .. devn .. ')'
+    local f = io.open('build.lua')
+    local build = f:read('*a'):gsub('local devn = [0-9]+', 'local devn = ' .. (devn+1))
+    f:close ()
+    io.open('build.lua', 'w'):write(build)
 end
 
 wings = wings:gsub('\n%-%- <TO REMOVE.-%-%- TO REMOVE>\n', '')
