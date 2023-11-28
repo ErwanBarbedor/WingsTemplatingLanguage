@@ -12,12 +12,15 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with Wings. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-print("Creating wings.lua...")
 -- Merge all wings code into a single standalone file
+-- Quite dirty, but do the job
+
+print("Creating wings.lua...")
+
 local wings   = io.open 'main.lua':read '*a'
 local version = 'Wings v0.1.0'
 local dev   = true
-local devn = 6
+local devn = 2000
 
 -- If in developpement, make the version number unic.
 if dev then
@@ -28,11 +31,19 @@ if dev then
     io.open('build.lua', 'w'):write(build)
 end
 
-wings = wings:gsub('\n%-%- <TO REMOVE.-%-%- TO REMOVE>\n', '')
 wings = wings:gsub('#VERSION', version)
+
+-- Replace include with file content
+wings = wings:gsub('\n%-%- <TO REMOVE.-%-%- TO REMOVE>\n', '')
 wings = wings:gsub('include \'(%w+)\'', function(m)
     return io.open(m .. '.lua'):read '*a':gsub('^.-%]%]', '')
 end)
+
+-- Place cli help at the top of the file
+local cli_help_pattern = 'local cli_help = %[=%[.*%]=%]'
+local cli_help = wings:match(cli_help_pattern)
+wings = wings:gsub(cli_help_pattern, '')
+wings = wings:gsub('%-%-<CLI HELP>', cli_help)
 
 io.open('dist/wings.lua', 'w'):write(wings)
 print("Done with sucess")
