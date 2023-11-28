@@ -1,3 +1,3 @@
 # Wings Templating Language
 
-[🇫🇷 version](#doc/fr/readme.md)
+[🇫🇷 version](doc/fr/readme.md)

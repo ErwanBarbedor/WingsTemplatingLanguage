@@ -1,21 +1,21 @@
---[[This file is part of Wings Script.
+--[[This file is part of Wings.
 
-Wings Script is free software: you can redistribute it and/or modify
+Wings is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3 of the License.
 
-Wings Script is distributed in the hope that it will be useful,
+Wings is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with Wings Script. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with Wings. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
 print("Creating wings.lua...")
 -- Merge all wings code into a single standalone file
 local wings   = io.open 'main.lua':read '*a'
-local version = 'Wings Script v0.1'
+local version = 'Wings v0.1'
 local alpha   = true
 
 if alpha then

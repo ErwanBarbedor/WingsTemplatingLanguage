@@ -2,7 +2,7 @@
 #VERSION
 Copyright (C) 2023  Erwan Barbedor
 
-Check https://github.com/ErwanBarbedor/LuaWingsScript
+Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
 for documentation, tutorial or to report issues.
 
 This program is free software: you can redistribute it and/or modify
