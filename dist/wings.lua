@@ -1,5 +1,5 @@
 --[[
-Wings v0.1
+Wings v0.1.0-dev (build 2082)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -18,9 +18,19 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+local cli_help = [=[
+Usage :
+    lua wings -h --help
+        Show this help
+    lua wings -i --input input [-o --output output] [-l --luacode path]
+        input: file to handle
+        output: if provided, save wings output in this location. If not, print the result.
+        lua: if provided, save transpiled code in given directory
+]=]
+
 local Wings = {}
 
-Wings._VERSION = "Wings v0.1"
+Wings._VERSION = "Wings v0.1.0-dev (build 2082)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -961,10 +971,22 @@ function Wings:new ()
     return wings
 end
 
-function Wings:render(code, filename)
+function Wings:render(code, filename, luacode_save_dir)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
+
+    if luacode_save_dir then
+        os.execute('mkdir -p ' .. luacode_save_dir)
+        local path = luacode_save_dir .. filename:gsub('%..*$', '.lua')
+        local file = io.open(path, "w")
+        if file then
+            file:write(luacode)
+            file:close ()
+        else
+            error("Cannot write the file '" .. path .. "'")
+        end
+    end
 
     table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
 
@@ -1002,7 +1024,7 @@ function Wings:render(code, filename)
     return result
 end
 
-function Wings:renderFile (path)
+function Wings:renderFile (path, luacode_save_dir)
     -- Too automaticaly read the file and pass the name to render
     local file = io.open(path)
 
@@ -1010,7 +1032,112 @@ function Wings:renderFile (path)
         error("The file '" .. path .. "' doesn't exist.")
     end
 
-    return self:render(file:read"*a", path)
+    return self:render(file:read"*a", path, luacode_save_dir)
+end
+
+
+
+-- wings -i test.plume -c plume
+-- Suff for use wings as a cli app
+
+
+
+-- Assume that, if the first arg is "wings.lua", we are
+-- directly called from the command line
+if arg[0]:match('[^/]*$') == 'wings.lua' then
+
+	local cli_parameters = {
+		input=true,
+		output=true,
+		config=true,
+		luacode=true,
+		help=true
+	}
+	local cli_args = {}
+	-- parse args
+	local i = 0
+	local err
+
+	while i < #arg do
+		i = i + 1
+		local argname, argvalue
+		if arg[i]:match('^%-%-') then
+			argname = arg[i]:sub(3, -1)
+			
+		elseif arg[i]:match('^%-') then
+			if #arg[i] > 2 then
+				err = "Malformed argument '" .. arg[i] .. "'. Do yo mean '-" .. arg[i] .. "'?"
+				break
+			end
+
+			for name, _ in pairs(cli_parameters) do
+				if name:sub(1, 1) == arg[i]:sub(2, 2) then
+					argname = name
+					break
+				end
+			end
+
+			argname = argname or arg[i]:sub(2, 2)
+		else
+			err = "Malformed argument '" .. arg[i] .. "'. Maybe parameter name is missing."
+			break
+		end
+
+		if not cli_parameters[argname] then
+			err = "Unknow parameter '" .. argname .. "'"
+			break
+		end
+
+		if argname == 'help' then
+			argvalue = ""
+		else
+			i = i + 1
+			argvalue = arg[i]
+		end
+
+		if not argvalue or argvalue:match('^%-') then
+			err = "No value for parameter '" .. argname .. "'"
+			break
+		end
+
+		cli_args[argname] = argvalue
+	end
+
+	if err then
+		print(err .. "\nUsage :" .. cli_help)
+	end
+
+	for k, v in pairs(cli_args) do
+		print(k, v)
+	end
+
+	if cli_args.help then
+		print(cli_help)
+	elseif not cli_args.input then
+		print("No input file provided")
+	else
+		local luacode_output = cli_args.luacode
+		wings = Wings:new ()
+		if cli_args.config then
+			wings:renderFile (cli_args.config)
+		end
+		local result = wings:renderFile(cli_args.input, luacode_output):tostring ()
+
+		if cli_args.output then
+			if #result > 0 then
+				local file = io.open(cli_args.output, 'w')
+				if file then
+					file:write(result)
+					file:close ()
+				else
+					error("Cannot write the file '" .. cli_args.output .. "'")
+				end
+			end
+		else
+			print(result)
+		end
+	end
+
 end
 
 return Wings

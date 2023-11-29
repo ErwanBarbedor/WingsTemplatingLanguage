@@ -29,6 +29,10 @@ Bien que développé initialement pour la création de supports pédagogiques en
 ## Installation
 Wings est écrit en Lua et compatible avec les versions de 5.1 à 5.4, ainsi que luajit.
 
+## Utiliser Wings
+### En ligne de commande
+### Dans un programme Lua
+
 ## Apprendre Wings
 
 Si vous ne connaissez pas le langage Lua ou souhaitez juste des informations simples sur Wings, suivez ce [tutoriel](doc/fr/tutorial-luabeginner.md)

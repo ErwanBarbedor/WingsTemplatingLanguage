@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
+--<CLI HELP>
+
 local Wings = {}
 
 Wings._VERSION = "#VERSION"
@@ -102,10 +104,22 @@ function Wings:new ()
     return wings
 end
 
-function Wings:render(code, filename)
+function Wings:render(code, filename, luacode_save_dir)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
+
+    if luacode_save_dir then
+        os.execute('mkdir -p ' .. luacode_save_dir)
+        local path = luacode_save_dir .. filename:gsub('%..*$', '.lua')
+        local file = io.open(path, "w")
+        if file then
+            file:write(luacode)
+            file:close ()
+        else
+            error("Cannot write the file '" .. path .. "'")
+        end
+    end
 
     table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
 
@@ -143,7 +157,7 @@ function Wings:render(code, filename)
     return result
 end
 
-function Wings:renderFile (path)
+function Wings:renderFile (path, luacode_save_dir)
     -- Too automaticaly read the file and pass the name to render
     local file = io.open(path)
 
@@ -151,7 +165,9 @@ function Wings:renderFile (path)
         error("The file '" .. path .. "' doesn't exist.")
     end
 
-    return self:render(file:read"*a", path)
+    return self:render(file:read"*a", path, luacode_save_dir)
 end
+
+include 'cli'
 
 return Wings
