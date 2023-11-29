@@ -25,6 +25,8 @@ local cli_help = [=[
 Usage :
     lua wings -h --help
         Show this help
+    lua wings -v --version
+    	Show the wings version
     lua wings -i --input input [-o --output output] [-l --luacode path]
         input: file to handle
         output: if provided, save wings output in this location. If not, print the result.
@@ -40,7 +42,8 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 		output=true,
 		config=true,
 		luacode=true,
-		help=true
+		help=true,
+		version=true
 	}
 	local cli_args = {}
 	-- parse args
@@ -77,7 +80,7 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 			break
 		end
 
-		if argname == 'help' then
+		if argname == 'help' or argname == 'version' then
 			argvalue = ""
 		else
 			i = i + 1
@@ -96,12 +99,10 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 		print(err .. "\nUsage :" .. cli_help)
 	end
 
-	for k, v in pairs(cli_args) do
-		print(k, v)
-	end
-
 	if cli_args.help then
 		print(cli_help)
+	elseif cli_args.version then
+		print(Wings._VERSION)
 	elseif not cli_args.input then
 		print("No input file provided")
 	else
