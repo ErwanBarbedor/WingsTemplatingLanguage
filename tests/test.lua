@@ -104,9 +104,9 @@ local function test(wings_path, test_path, simplelog, fullog)
     -- local wingsdir = arg[1]:gsub('[^/]*$', '')
     local testdir   = test_path :gsub('[^/]*$', '')
     local wingsdir  = wings_path:gsub('[^/]*$', '')
-    local wingsname = wings_path:match('[^/]*$')
+    local wingsname = wings_path:match('[^/]*$'):gsub('%..-$', '') 
     package.path = package.path .. ";"..wingsdir.."?.lua"..";"..testdir.."/?.lua"
-
+    
     local Wings = require (wingsname)
 
     local n_test   = 0

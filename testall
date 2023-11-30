@@ -7,7 +7,7 @@ echo "Passing wings test for all lua version. (dev version)" #for error location
 for v in "${versions[@]}"
 do
     printf "\tlua%s : " "$v"
-    eval "lua$v $script_dir/tests/test.lua --run --fullog --wings $script_dir/main --test $script_dir/tests/"
+    eval "lua$v $script_dir/tests/test.lua --run --fullog --wings $script_dir/wings --test $script_dir/tests/"
 done
 
 echo "Passing wings test for all lua version. (dist version)"

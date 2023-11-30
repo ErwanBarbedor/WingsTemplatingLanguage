@@ -17,10 +17,10 @@ You should have received a copy of the GNU General Public License along with Win
 
 print("Creating wings.lua...")
 
-local wings   = io.open 'main.lua':read '*a'
+local wings   = io.open 'wings.lua':read '*a'
 local version = 'Wings v1.0.0'
 local dev   = true
-local devn = 2097
+local devn = 2125
 
 -- If in developpement, make the version number unic.
 if dev then
