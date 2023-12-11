@@ -81,6 +81,8 @@ function Wings:new ()
     wings.filestack = {}
     -- Activate/desactivate error handling by wings.
     wings.PLUME_ERROR_HANDLING = false
+    -- Store function information
+    wings.function_args_info = setmetatable({}, {__mode="k"})
     
     wings.type = "wings"
     wings.transpiler:compile_patterns ()
@@ -108,7 +110,7 @@ function Wings:render(code, filename, luacode_save_dir)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
-
+    -- print(luacode)
     if luacode_save_dir then
         os.execute('mkdir -p ' .. luacode_save_dir)
         local path = luacode_save_dir .. filename:gsub('%..*$', '.lua')

@@ -30,7 +30,7 @@ bar
 
 #-- TEST : begin sugar 1
 #macro foo(x) <#x> #end
-#begin foo
+#begin foo()
     foo
 #end
 #-- RESULT

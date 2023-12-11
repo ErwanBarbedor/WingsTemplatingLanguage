@@ -15,15 +15,13 @@ You should have received a copy of the GNU General Public License along with Win
 -- All std functions will be included in wings.env at 
 -- wings instance creation.
 
-function Wings.std.import(wings, args)
+function Wings.std.import(wings, name)
     -- This function work like require :
     -- Search for a file named 'name.wings' and 'execute it'
     -- In the context of wings, the file will be rendered and added to the output
     -- Unlike require, result will not be cached
     local failed_path = {}
     local file
-
-    local name = wings:make_args_list(args)
 
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
@@ -48,10 +46,9 @@ function Wings.std.import(wings, args)
     return result
 end
 
-function Wings.std.include (wings, args)
+function Wings.std.include (wings, name)
     -- include a file in the document, without execute it
     -- the path must be relative to the current file
-    local name = wings:make_args_list(args)
 
     local path = wings:dirname () .. name:tostring ()
 

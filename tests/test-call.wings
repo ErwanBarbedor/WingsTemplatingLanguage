@@ -19,7 +19,7 @@ foo foo
 #macro double(x=bar)
     #x #x
 #end
-#double
+#double()
 #-- RESULT
 bar bar
 
@@ -59,7 +59,7 @@ foofoo
 #macro cat(x=bar space bar)
     #x
 #end
-#cat
+#cat()
 #-- RESULT
 bar space bar
 
@@ -70,7 +70,7 @@ bar space bar
 #macro cat(x=#foo)
     #x
 #end
-#cat
+#cat()
 #-- RESULT
 
  bar 
@@ -96,7 +96,7 @@ foofoo
 #function double(x=bar)
     return x .. " " .. x
 #end
-#double
+#double()
 #-- RESULT
 bar bar
 #-- END
@@ -132,7 +132,7 @@ foofoo
 #function cat(x=bar space bar)
     return x
 #end
-#cat
+#cat()
 #-- RESULT
 bar space bar
 #-- END
@@ -142,7 +142,7 @@ bar space bar
 #function cat(x=#foo)
     return x
 #end
-#cat
+#cat()
 #-- RESULT
 
  bar 

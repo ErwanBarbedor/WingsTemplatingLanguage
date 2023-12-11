@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2124)
+Wings v1.0.0-dev (build 2174)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2124)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2174)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -194,8 +194,10 @@ function Wings.transpiler:transpile (code)
         end
 
         -- write \n only if the line contain text
-        self.line = self.line:gsub('\n$', '')
+        self.line = self.line:gsub('\r?\n$', '')
         self.pure_lua_line = true
+
+
 
         local rawline = self.line
         while #self.line > 0 do
@@ -339,24 +341,38 @@ function Wings.transpiler:write_variable(s)
     end
 end
 
--- Manage function call
-function Wings.transpiler:write_functioncall_begin (s)
-    -- write the begin of a function call : give the function name,
-    -- open a table brace for containing incomings arguments.
-    table.insert(self.chunck, '\n' .. self.indent .. 'wings:write(' .. s .. ' {')
-    self:increment_indent ()
+function Wings.transpiler:write_functiondef_info (name, info)
+    -- store function args names and defauts values
+    table.insert(self.chunck, '\n'..self.indent..'wings.function_args_info[' .. name .. '] = ' .. info)
 end
 
-function Wings.transpiler:write_functioncall_end ()
-    -- write the end of a function call : closing braces
-    self:decrement_indent ()
-    table.insert(self.chunck, '\n' .. self.indent .. '})')
+function Wings.transpiler:write_functioncall_init (stack_len)
+    -- Create the table used to store function arguments
+    table.insert(self.chunck, '\n' .. self.indent .. 'wings._args' .. stack_len .. ' = {}\n')
 end
 
-function Wings.transpiler:write_functioncall_arg_begin (name)
+function Wings.transpiler:write_functioncall_final (s, stack_len, direct)
+    -- Call the function and write the result.
+    -- Handle named argument and defaut values.
+    -- direct : called without argument.
+
+    if direct then
+         table.insert(self.chunck, '\n' .. self.indent
+            .. 'wings:write(' .. s .. '(wings:make_args_list ('.. s ..', {})))')
+    else
+        table.insert(self.chunck, '\n' .. self.indent
+            .. 'wings:write(' .. s .. '(wings:make_args_list ('.. s ..', wings._args' .. stack_len .. ')))')
+    end
+end
+
+function Wings.transpiler:write_functioncall_arg_begin (name, stack_len)
     -- write the begining of a argument : a function to encompass the argument body.
     -- name must be a valid lua key following by a '='
-    table.insert(self.chunck, '\n' .. self.indent .. (name or '') .. '(function()')
+    if name then
+        table.insert(self.chunck, '\n' .. self.indent .. 'wings._args' .. stack_len .. '["' .. name .. '"] = ((function()')
+    else
+        table.insert(self.chunck, '\n' .. self.indent .. 'table.insert (wings._args' .. stack_len .. ', (function()')
+    end
     self:increment_indent ()
     table.insert(self.chunck, '\n' .. self.indent .. 'wings:push()')
 end
@@ -365,7 +381,7 @@ function Wings.transpiler:write_functioncall_arg_end ()
     -- Closing args function
     table.insert(self.chunck, '\n' .. self.indent .. 'return wings:pop()')
     self:decrement_indent ()
-    table.insert(self.chunck, '\n' .. self.indent .. 'end)()')
+    table.insert(self.chunck, '\n' .. self.indent .. 'end)())')
     self:increment_indent ()
 end
 
@@ -379,7 +395,7 @@ function Wings.transpiler:capture_functioncall_named_arg ()
         self.line = self.line:sub(#name+1, -1)
     end
 
-    return name
+    return (name or ''):match('%w+')
 end
 
 function Wings.transpiler:capture_syntax_feature (capture)
@@ -409,9 +425,8 @@ function Wings.transpiler:capture_syntax_feature (capture)
         -- Inside a call, push a new argument
         self:write_functioncall_arg_end ()
         self:decrement_indent ()
-        self:write_lua (',')
         local name = self:capture_functioncall_named_arg ()
-        self:write_functioncall_arg_begin (name)
+        self:write_functioncall_arg_begin (name, #self.stack)
     
     elseif self.top.lua then
         -- this is lua code
@@ -448,15 +463,15 @@ function Wings.transpiler:handle_inside_call (command)
         
         if self.top.is_begin_sugar then
             self:write_functioncall_arg_end ()
-            self:decrement_indent ()
-            self:write_lua (',')
-            self:write_functioncall_arg_begin ("['"..self.patterns.special_name_prefix.."body'] = ")
-            table.insert(self.stack, {name="begin-sugar"})
+            self:write_functioncall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
+            
+            table.remove(self.stack)
+            table.insert(self.stack, {name="begin-sugar", macro=self.top.macro})
         else
             self:write_functioncall_arg_end ()
-            self:decrement_indent ()
-            
-            self:write_functioncall_end ()
+            self:write_functioncall_final (self.top.macro, #self.stack)
+
+            table.remove(self.stack)
         end
     
     -- This is the end of a lua-inline chunck
@@ -481,6 +496,9 @@ function Wings.transpiler:handle_lua_code (command)
         table.remove(self.stack)
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
+
+        -- save function arguments info
+        self:write_functiondef_info (self.top.fname, self.top.args)
 
     elseif command == "do" and (self.top.name == "for" or self.top.name == "while") then
         table.remove(self.stack)
@@ -566,22 +584,8 @@ function Wings.transpiler:handle_new_function (ismacro)
 
     local args_name, args_info = self:extract_args (args)
 
-    self:write_lua ('\n' .. self.indent.. 'function ' .. name .. ' (args)')
+    self:write_lua ('\n' .. self.indent.. 'function ' .. name .. args_name )
     self:increment_indent ()
-
-    -- Support positional args
-    if args_name:match('^%(%s*%)$') then
-        self:write_lua ('\n' .. self.indent .. 'args = nil')
-    else
-        -- Dont polluate environnement with a new variable "args"
-        self:write_lua ('\n' .. self.indent .. 'wings._args = args')
-        self:write_lua ('\n' .. self.indent .. 'args = nil')
-
-        self:write_lua ('\n' .. self.indent
-                        .. 'local ' .. args_name:sub(2, -2)
-                        .. ' = wings:make_args_list (wings._args, ' .. args_info ..')')
-        self:write_lua ('\n' .. self.indent .. 'wings._args = nil')
-    end
 
     if ismacro then
         self:write_lua ('\n' .. self.indent .. 'wings:push()')
@@ -599,11 +603,15 @@ function Wings.transpiler:handle_end_keyword ()
 
     if self.top.name == "begin-sugar" then
         self:write_functioncall_arg_end ()
-        self:decrement_indent ()
-        self:write_functioncall_end ()
+        self:write_functioncall_final (self.top.macro, #self.stack+1)
     else
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
+    end
+
+    -- save macro arguments info
+    if self.top.name == 'macro' then
+        self:write_functiondef_info (self.top.fname, self.top.args)
     end
 end
 
@@ -620,26 +628,25 @@ function Wings.transpiler:handle_macro_call (command)
         self.pure_lua_line = false
     end
 
-    if self.line:match('^%(%s*%)') then
+    if self.line:match('^%(%s*%)') and not is_begin_sugar then
         self.line = self.line:gsub('^%(%s*%)', '')
-        self:write_variable (command..'()')
+        self:write_functioncall_final (command, #self.stack, true)
     
     elseif self.line:match('^%' .. self.patterns.open_call) then
         self.line = self.line:sub(2, -1)
-        self:write_functioncall_begin (command)
+        
+        table.insert(self.stack, {name="call", deep=1, is_begin_sugar=is_begin_sugar, macro=command})
         
         local name = self:capture_functioncall_named_arg ()
-        self:write_functioncall_arg_begin (name)
+        self:write_functioncall_init (#self.stack) -- pass stack len to create a unique id 
+        self:write_functioncall_arg_begin (name, #self.stack)
 
-        table.insert(self.stack, {name="call", deep=1, is_begin_sugar=is_begin_sugar})
-    
     -- Duplicate code with arg_separator check
     elseif is_begin_sugar then
-        self:write_functioncall_begin (command)
-        self:write_functioncall_arg_begin ("['"..self.patterns.special_name_prefix.."body'] = ")
-        self:increment_indent ()
+        self:write_functioncall_init (#self.stack)
+        self:write_functioncall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
 
-        table.insert(self.stack, {name="begin-sugar"})
+        table.insert(self.stack, {name="begin-sugar", macro=command})
     
     -- Implicite function call.
     -- Cumbersome, but a way to have function name in traceback when the function throw an error
@@ -681,11 +688,11 @@ function Wings:pop ()
     return table.remove(self.stack)
 end
 
-function Wings:make_args_list (given_args, info)
+function Wings:make_args_list (f, given_args)
     -- From a call with mixed positional and named arguments,
     -- make a lua-valid argument list.
-    -- If not "info", return the positional args
 
+    
     local given_args = given_args or {}
     
     -- sort positional/named
@@ -701,6 +708,10 @@ function Wings:make_args_list (given_args, info)
             named_args[k] = v
         end
     end
+
+    -- Check if we have informations about f.
+    -- If not return the positional args
+    local info = self.function_args_info[f]
 
     if not info then
         return (unpack or table.unpack) (positional_args)
@@ -874,15 +885,13 @@ Wings.std = {}
 -- All std functions will be included in wings.env at 
 -- wings instance creation.
 
-function Wings.std.import(wings, args)
+function Wings.std.import(wings, name)
     -- This function work like require :
     -- Search for a file named 'name.wings' and 'execute it'
     -- In the context of wings, the file will be rendered and added to the output
     -- Unlike require, result will not be cached
     local failed_path = {}
     local file
-
-    local name = wings:make_args_list(args)
 
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
@@ -907,10 +916,9 @@ function Wings.std.import(wings, args)
     return result
 end
 
-function Wings.std.include (wings, args)
+function Wings.std.include (wings, name)
     -- include a file in the document, without execute it
     -- the path must be relative to the current file
-    local name = wings:make_args_list(args)
 
     local path = wings:dirname () .. name:tostring ()
 
@@ -950,6 +958,8 @@ function Wings:new ()
     wings.filestack = {}
     -- Activate/desactivate error handling by wings.
     wings.PLUME_ERROR_HANDLING = false
+    -- Store function information
+    wings.function_args_info = setmetatable({}, {__mode="k"})
     
     wings.type = "wings"
     wings.transpiler:compile_patterns ()
@@ -977,7 +987,7 @@ function Wings:render(code, filename, luacode_save_dir)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
-
+    -- print(luacode)
     if luacode_save_dir then
         os.execute('mkdir -p ' .. luacode_save_dir)
         local path = luacode_save_dir .. filename:gsub('%..*$', '.lua')

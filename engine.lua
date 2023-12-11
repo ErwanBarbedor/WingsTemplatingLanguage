@@ -44,11 +44,11 @@ function Wings:pop ()
     return table.remove(self.stack)
 end
 
-function Wings:make_args_list (given_args, info)
+function Wings:make_args_list (f, given_args)
     -- From a call with mixed positional and named arguments,
     -- make a lua-valid argument list.
-    -- If not "info", return the positional args
 
+    
     local given_args = given_args or {}
     
     -- sort positional/named
@@ -64,6 +64,10 @@ function Wings:make_args_list (given_args, info)
             named_args[k] = v
         end
     end
+
+    -- Check if we have informations about f.
+    -- If not return the positional args
+    local info = self.function_args_info[f]
 
     if not info then
         return (unpack or table.unpack) (positional_args)
