@@ -44,6 +44,7 @@ end
 -- TO REMOVE>
 
 include 'utils'
+include 'error-help'
 
 Wings.transpiler = {}
 include 'patterns'
@@ -109,22 +110,23 @@ function Wings:new ()
 end
 
 function Wings:render(code, filename)
-    -- Transpile the code, then execute it and return the result
 
+    -- Transpile the code, then execute it and return the result
     local luacode = self.transpiler:transpile (code)
 
-    table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
+    
 
     if filename then
-        name = filename .. ".wings"
+        name = filename .. "@wings"
     else
-        name = '<internal-'..#self.filestack..'.wings>'
+        name = '<internal-'..#self.filestack..'>@wings'
     end
 
+    table.insert(self.filestack, {filename=name, code=code, luacode=luacode})
+
     if self.SAVE_LUACODE_DIR then
-        filename = filename or name:gsub('[<>]', '_')
-        os.execute('mkdir -p ' .. self.SAVE_LUACODE_DIR)
-        local path = self.SAVE_LUACODE_DIR .. filename:gsub('%..*$', '.lua')
+        filename = (filename or name:gsub('[<>]', '_')):gsub('@wings$', '')
+        local path = self.SAVE_LUACODE_DIR .. '/' .. filename .. '.lua'
         local file = io.open(path, "w")
         if file then
             file:write(luacode)
@@ -145,7 +147,7 @@ function Wings:render(code, filename)
     end
     
     local sucess, result = xpcall(f, function(err)
-        -- To debugging error handling...
+        -- --To debug error handling...
         -- local sucess, result = pcall(self.format_error, self, err)
         -- if not sucess then
         --     print(result)
@@ -158,10 +160,8 @@ function Wings:render(code, filename)
     end)
 
     if not sucess then
-        error(result, -1)
+        self.utils.error(result, -1)
     end
-
-    table.remove(self.filestack)
 
     result.luacode = luacode
     return result

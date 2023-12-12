@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2199)
+Wings v1.0.0-dev (build 2229)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2199)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2229)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -67,15 +67,29 @@ function Wings.utils.load (s, name, env)
     return f, err
 end
 
-function Wings.utils.convert_noline (code, line)
+function Wings.utils.convert_noline (filestack, line)
     local indent, filename, noline, message = line:match('^(%s*)([^:]*):([^:]*):(.*)')
-    
 
     if not filename then
         return line
     end
 
-    if filename:match('%.wings$') or filename:match('%.wings>$') then
+    -- Assume that filename ending with @wings are wings files.
+    if filename:match('@wings$') then
+        local code
+        for _, file in ipairs(filestack) do
+            if file.filename == filename then
+                code = file.luacode
+                break
+            end
+        end
+
+        -- "@wings" isn't part of the filename
+        filename = filename:gsub('@wings$', '')
+        -- Dont needed
+        filename = filename:gsub('^%./', '')
+        
+
         local noline_lua     = tonumber(noline)
         local error_line     = ""
         local noline_wings   = 0
@@ -93,10 +107,23 @@ function Wings.utils.convert_noline (code, line)
             end
         end
 
-        return indent .. filename .. ":" .. noline_wings .. ":" .. message:gsub('\n$', "(lua line : " .. noline .. ")\n")
+        return indent .. 'file "' .. filename .. '", line ' .. noline_wings .. " (lua "..noline..") :" .. message
     else
         return line
     end
+end
+
+function Wings.utils.error (msg)
+    print("Wings failed with this error : ")
+    print(msg)
+
+    for pattern, f in pairs(Wings.utils.ERROR_HELP) do
+        local m = msg:match(pattern)
+        if m then
+            f(m)
+        end
+    end
+    os.exit()
 end
 
 -- Predefined list of standard Lua variables/functions for various versions
@@ -110,6 +137,18 @@ Wings.utils.LUA_STD_FUNCTION = {
     ["5.4"]="_VERSION arg assert collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 warn xpcall",
 
     jit="_VERSION arg assert bit collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall"
+}
+
+
+-- For certains errors, give hint to new users
+
+Wings.utils.ERROR_HELP = {
+	["attempt to call a nil value %(.- '([%w_]+)'%)"] = function (m)
+		print('Hints:')
+		print('\t- Check if "' .. m .. '" is spelled correctly.')
+		print('\t- If "' .. m .. '" is part of an external code, check if you have loaded the required library with "import" or "require".')
+		print('\t- Else, make sure you have defined "' .. m .. '" as macro or a function.')
+	end
 }
 
 Wings.transpiler = {}
@@ -769,7 +808,7 @@ function Wings:format_error (err)
     traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
 
     traceback = traceback:gsub('[^\n]*\n?', function (...)
-        return self.utils.convert_noline (self.filestack[#self.filestack].luacode, ...)
+        return self.utils.convert_noline (self.filestack, ...)
     end)
 
     return traceback
@@ -984,22 +1023,23 @@ function Wings:new ()
 end
 
 function Wings:render(code, filename)
-    -- Transpile the code, then execute it and return the result
 
+    -- Transpile the code, then execute it and return the result
     local luacode = self.transpiler:transpile (code)
 
-    table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
+    
 
     if filename then
-        name = filename .. ".wings"
+        name = filename .. "@wings"
     else
-        name = '<internal-'..#self.filestack..'.wings>'
+        name = '<internal-'..#self.filestack..'>@wings'
     end
 
+    table.insert(self.filestack, {filename=name, code=code, luacode=luacode})
+
     if self.SAVE_LUACODE_DIR then
-        filename = filename or name:gsub('[<>]', '_')
-        os.execute('mkdir -p ' .. self.SAVE_LUACODE_DIR)
-        local path = self.SAVE_LUACODE_DIR .. filename:gsub('%..*$', '.lua')
+        filename = (filename or name:gsub('[<>]', '_')):gsub('@wings$', '')
+        local path = self.SAVE_LUACODE_DIR .. '/' .. filename .. '.lua'
         local file = io.open(path, "w")
         if file then
             file:write(luacode)
@@ -1020,7 +1060,7 @@ function Wings:render(code, filename)
     end
     
     local sucess, result = xpcall(f, function(err)
-        -- To debugging error handling...
+        -- --To debug error handling...
         -- local sucess, result = pcall(self.format_error, self, err)
         -- if not sucess then
         --     print(result)
@@ -1033,10 +1073,8 @@ function Wings:render(code, filename)
     end)
 
     if not sucess then
-        error(result, -1)
+        self.utils.error(result, -1)
     end
-
-    table.remove(self.filestack)
 
     result.luacode = luacode
     return result

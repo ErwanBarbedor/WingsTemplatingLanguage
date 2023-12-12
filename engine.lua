@@ -126,7 +126,7 @@ function Wings:format_error (err)
     traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
 
     traceback = traceback:gsub('[^\n]*\n?', function (...)
-        return self.utils.convert_noline (self.filestack[#self.filestack].luacode, ...)
+        return self.utils.convert_noline (self.filestack, ...)
     end)
 
     return traceback

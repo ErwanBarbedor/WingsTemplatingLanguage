@@ -40,15 +40,29 @@ function Wings.utils.load (s, name, env)
     return f, err
 end
 
-function Wings.utils.convert_noline (code, line)
+function Wings.utils.convert_noline (filestack, line)
     local indent, filename, noline, message = line:match('^(%s*)([^:]*):([^:]*):(.*)')
-    
 
     if not filename then
         return line
     end
 
-    if filename:match('%.wings$') or filename:match('%.wings>$') then
+    -- Assume that filename ending with @wings are wings files.
+    if filename:match('@wings$') then
+        local code
+        for _, file in ipairs(filestack) do
+            if file.filename == filename then
+                code = file.luacode
+                break
+            end
+        end
+
+        -- "@wings" isn't part of the filename
+        filename = filename:gsub('@wings$', '')
+        -- Dont needed
+        filename = filename:gsub('^%./', '')
+        
+
         local noline_lua     = tonumber(noline)
         local error_line     = ""
         local noline_wings   = 0
@@ -66,10 +80,23 @@ function Wings.utils.convert_noline (code, line)
             end
         end
 
-        return indent .. filename .. ":" .. noline_wings .. ":" .. message:gsub('\n$', "(lua line : " .. noline .. ")\n")
+        return indent .. 'file "' .. filename .. '", line ' .. noline_wings .. " (lua "..noline..") :" .. message
     else
         return line
     end
+end
+
+function Wings.utils.error (msg)
+    print("Wings failed with this error : ")
+    print(msg)
+
+    for pattern, f in pairs(Wings.utils.ERROR_HELP) do
+        local m = msg:match(pattern)
+        if m then
+            f(m)
+        end
+    end
+    os.exit()
 end
 
 -- Predefined list of standard Lua variables/functions for various versions
