@@ -66,7 +66,7 @@ function Wings.utils.convert_noline (code, line)
             end
         end
 
-        return indent .. filename .. ":" .. noline_wings .. ":" .. message
+        return indent .. filename .. ":" .. noline_wings .. ":" .. message:gsub('\n$', "(lua line : " .. noline .. ")\n")
     else
         return line
     end
