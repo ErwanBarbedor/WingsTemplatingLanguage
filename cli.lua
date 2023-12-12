@@ -106,12 +106,9 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 	elseif not cli_args.input then
 		print("No input file provided")
 	else
-		local luacode_output = cli_args.luacode
 		wings = Wings:new ()
-		if cli_args.config then
-			wings:renderFile (cli_args.config)
-		end
-		local result = wings:renderFile(cli_args.input, luacode_output):tostring ()
+		wings.SAVE_LUACODE_DIR = cli_args.luacode
+		local result = wings:renderFile(cli_args.input):tostring ()
 
 		if cli_args.output then
 			if #result > 0 then

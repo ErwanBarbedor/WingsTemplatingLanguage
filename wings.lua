@@ -80,7 +80,9 @@ function Wings:new ()
     -- Track differents files rendered in the same instance
     wings.filestack = {}
     -- Activate/desactivate error handling by wings.
-    wings.PLUME_ERROR_HANDLING = true
+    wings.WINGS_ERROR_HANDLING = true
+    -- Path to save transpiled code
+    wings.SAVE_LUACODE_DIR = false
     -- Store function information
     wings.function_args_info = setmetatable({}, {__mode="k"})
     
@@ -106,22 +108,10 @@ function Wings:new ()
     return wings
 end
 
-function Wings:render(code, filename, luacode_save_dir)
+function Wings:render(code, filename)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
-    -- print(luacode)
-    if luacode_save_dir then
-        os.execute('mkdir -p ' .. luacode_save_dir)
-        local path = luacode_save_dir .. filename:gsub('%..*$', '.lua')
-        local file = io.open(path, "w")
-        if file then
-            file:write(luacode)
-            file:close ()
-        else
-            error("Cannot write the file '" .. path .. "'")
-        end
-    end
 
     table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
 
@@ -131,9 +121,22 @@ function Wings:render(code, filename, luacode_save_dir)
         name = '<internal-'..#self.filestack..'.wings>'
     end
 
+    if self.SAVE_LUACODE_DIR then
+        filename = filename or name:gsub('[<>]', '_')
+        os.execute('mkdir -p ' .. self.SAVE_LUACODE_DIR)
+        local path = self.SAVE_LUACODE_DIR .. filename:gsub('%..*$', '.lua')
+        local file = io.open(path, "w")
+        if file then
+            file:write(luacode)
+            file:close ()
+        else
+            error("Cannot write the file '" .. path .. "'")
+        end
+    end
+
     local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
     if not f then
-        if self.PLUME_ERROR_HANDLING then
+        if self.WINGS_ERROR_HANDLING then
             error(self:format_error (err), -1)
         else
             error(err)
@@ -147,7 +150,7 @@ function Wings:render(code, filename, luacode_save_dir)
         -- if not sucess then
         --     print(result)
         -- end
-        if self.PLUME_ERROR_HANDLING then
+        if self.WINGS_ERROR_HANDLING then
             return self:format_error (err)
         else
             return err
@@ -164,7 +167,7 @@ function Wings:render(code, filename, luacode_save_dir)
     return result
 end
 
-function Wings:renderFile (path, luacode_save_dir)
+function Wings:renderFile (path)
     -- Too automaticaly read the file and pass the name to render
     local file = io.open(path)
 
@@ -172,7 +175,7 @@ function Wings:renderFile (path, luacode_save_dir)
         error("The file '" .. path .. "' doesn't exist.")
     end
 
-    return self:render(file:read"*a", path, luacode_save_dir)
+    return self:render(file:read"*a", path)
 end
 
 include 'cli'
