@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with Win
 ]]
 function Wings:TokenList ()
     local tl = {}
-    tl.type = "tokenlist"
+    tl.type = "WingsTokenList"
 
     function tl:tostring ()
         local result = {}
@@ -50,8 +50,8 @@ function Wings:TokenList ()
     end
 
     local function checknumber (a, b)
-        assert(type(a) == 'number' or type(a) == 'table' and a.type == 'tokenlist')
-        assert(type(b) == 'number' or type(b) == 'table' and b.type == 'tokenlist')
+        assert(type(a) == 'number' or type(a) == 'table' and a.type == 'WingsTokenList')
+        assert(type(b) == 'number' or type(b) == 'table' and b.type == 'WingsTokenList')
         if type(a) ~= 'number' then
             a = a:tonumber ()
             assert(a)
@@ -90,7 +90,7 @@ end
 function Wings:Token (x)
     local tk = {}
     tk.content = x
-    tk.type = "token"
+    tk.type = "WingsToken"
 
     local mtk = {}
     

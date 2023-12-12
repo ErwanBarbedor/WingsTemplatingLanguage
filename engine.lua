@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License along with Win
 function Wings:write (x)
     -- Add a value to the output.
     if type(x) == "table" then
-        if x.type == "token" then
+        if x.type == "WingsToken" then
             table.insert(self.stack[#self.stack], x)
         else
             for _, xx in ipairs(x) do
