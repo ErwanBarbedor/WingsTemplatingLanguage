@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2191)
+Wings v1.0.0-dev (build 2192)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2191)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2192)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -769,7 +769,7 @@ function Wings:format_error (err)
     traceback = traceback:gsub('%s*%[C%]: in function \'xpcall\'.-$', '')
 
     traceback = traceback:gsub('[^\n]*\n?', function (...)
-        return wings.utils.convert_noline (wings.filestack[#wings.filestack].luacode, ...)
+        return self.utils.convert_noline (self.filestack[#self.filestack].luacode, ...)
     end)
 
     return traceback
@@ -954,7 +954,7 @@ function Wings:new ()
     -- Track differents files rendered in the same instance
     wings.filestack = {}
     -- Activate/desactivate error handling by wings.
-    wings.PLUME_ERROR_HANDLING = false
+    wings.PLUME_ERROR_HANDLING = true
     -- Store function information
     wings.function_args_info = setmetatable({}, {__mode="k"})
     
@@ -1016,6 +1016,11 @@ function Wings:render(code, filename, luacode_save_dir)
     end
     
     local sucess, result = xpcall(f, function(err)
+        -- To debugging error handling...
+        -- local sucess, result = pcall(self.format_error, self, err)
+        -- if not sucess then
+        --     print(result)
+        -- end
         if self.PLUME_ERROR_HANDLING then
             return self:format_error (err)
         else

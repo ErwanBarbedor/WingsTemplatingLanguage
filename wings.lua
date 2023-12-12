@@ -80,7 +80,7 @@ function Wings:new ()
     -- Track differents files rendered in the same instance
     wings.filestack = {}
     -- Activate/desactivate error handling by wings.
-    wings.PLUME_ERROR_HANDLING = false
+    wings.PLUME_ERROR_HANDLING = true
     -- Store function information
     wings.function_args_info = setmetatable({}, {__mode="k"})
     
@@ -142,6 +142,11 @@ function Wings:render(code, filename, luacode_save_dir)
     end
     
     local sucess, result = xpcall(f, function(err)
+        -- To debugging error handling...
+        -- local sucess, result = pcall(self.format_error, self, err)
+        -- if not sucess then
+        --     print(result)
+        -- end
         if self.PLUME_ERROR_HANDLING then
             return self:format_error (err)
         else
