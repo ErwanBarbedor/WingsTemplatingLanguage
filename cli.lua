@@ -18,16 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 ]]
 
--- wings -i test.plume -c plume
+-- wings.lua -i test.plume -c plume
 -- Suff for use wings as a cli app
 
 local cli_help = [=[
 Usage :
-    lua wings -h --help
+    lua wings.lua -h --help
         Show this help
-    lua wings -v --version
+    lua wings.lua -v --version
     	Show the wings version
-    lua wings -i --input input [-o --output output] [-l --luacode path]
+    lua wings.lua -i --input input [-o --output output] [-l --luacode path]
         input: file to handle
         output: if provided, save wings output in this location. If not, print the result.
         lua: if provided, save transpiled code in given directory

@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2232)
+Wings v1.0.0-dev (build 2233)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -20,11 +20,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local cli_help = [=[
 Usage :
-    lua wings -h --help
+    lua wings.lua -h --help
         Show this help
-    lua wings -v --version
+    lua wings.lua -v --version
     	Show the wings version
-    lua wings -i --input input [-o --output output] [-l --luacode path]
+    lua wings.lua -i --input input [-o --output output] [-l --luacode path]
         input: file to handle
         output: if provided, save wings output in this location. If not, print the result.
         lua: if provided, save transpiled code in given directory
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2232)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2233)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -1093,7 +1093,7 @@ end
 
 
 
--- wings -i test.plume -c plume
+-- wings.lua -i test.plume -c plume
 -- Suff for use wings as a cli app
 
 
