@@ -21,7 +21,7 @@ function Wings.std.import(wings, name)
     -- In the context of wings, the file will be rendered and added to the output
     -- Unlike require, result will not be cached
     local failed_path = {}
-    local file
+    local file, file_path
 
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
@@ -30,6 +30,8 @@ function Wings.std.import(wings, name)
         local path = path:gsub('?', name)
         file = io.open(path)
         if file then
+            file_path = path
+            file:close ()
             break
         else
             table.insert(failed_path, path)
@@ -40,8 +42,7 @@ function Wings.std.import(wings, name)
         error ("wings file '" .. name .. "' not found:\n    no file " .. table.concat(failed_path, '\n    no file '))
     end
 
-    local wingscode = file:read "*a"
-    local result    = wings:render(wingscode)
+    local result = wings:renderFile(file_path)
     
     return result
 end

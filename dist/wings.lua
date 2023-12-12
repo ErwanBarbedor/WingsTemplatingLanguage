@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2194)
+Wings v1.0.0-dev (build 2199)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2194)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2199)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -93,7 +93,7 @@ function Wings.utils.convert_noline (code, line)
             end
         end
 
-        return indent .. filename .. ":" .. noline_wings .. ":" .. message
+        return indent .. filename .. ":" .. noline_wings .. ":" .. message:gsub('\n$', "(lua line : " .. noline .. ")\n")
     else
         return line
     end
@@ -888,7 +888,7 @@ function Wings.std.import(wings, name)
     -- In the context of wings, the file will be rendered and added to the output
     -- Unlike require, result will not be cached
     local failed_path = {}
-    local file
+    local file, file_path
 
     -- name is a TokenList, so we need to convert it
     name = name:tostring()
@@ -897,6 +897,8 @@ function Wings.std.import(wings, name)
         local path = path:gsub('?', name)
         file = io.open(path)
         if file then
+            file_path = path
+            file:close ()
             break
         else
             table.insert(failed_path, path)
@@ -907,8 +909,7 @@ function Wings.std.import(wings, name)
         error ("wings file '" .. name .. "' not found:\n    no file " .. table.concat(failed_path, '\n    no file '))
     end
 
-    local wingscode = file:read "*a"
-    local result    = wings:render(wingscode)
+    local result = wings:renderFile(file_path)
     
     return result
 end
@@ -986,8 +987,17 @@ function Wings:render(code, filename)
     -- Transpile the code, then execute it and return the result
 
     local luacode = self.transpiler:transpile (code)
-    -- print(luacode)
+
+    table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
+
+    if filename then
+        name = filename .. ".wings"
+    else
+        name = '<internal-'..#self.filestack..'.wings>'
+    end
+
     if self.SAVE_LUACODE_DIR then
+        filename = filename or name:gsub('[<>]', '_')
         os.execute('mkdir -p ' .. self.SAVE_LUACODE_DIR)
         local path = self.SAVE_LUACODE_DIR .. filename:gsub('%..*$', '.lua')
         local file = io.open(path, "w")
@@ -997,14 +1007,6 @@ function Wings:render(code, filename)
         else
             error("Cannot write the file '" .. path .. "'")
         end
-    end
-
-    table.insert(self.filestack, {filename=filename, code=code, luacode=luacode})
-
-    if filename then
-        name = filename .. ".wings"
-    else
-        name = '<internal-'..#self.filestack..'.wings>'
     end
 
     local f, err = self.utils.load (luacode, "@" .. name ,  self.env)
