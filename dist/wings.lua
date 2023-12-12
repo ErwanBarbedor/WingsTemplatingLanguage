@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2174)
+Wings v1.0.0-dev (build 2184)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2174)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2184)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -648,10 +648,9 @@ function Wings.transpiler:handle_macro_call (command)
 
         table.insert(self.stack, {name="begin-sugar", macro=command})
     
-    -- Implicite function call.
-    -- Cumbersome, but a way to have function name in traceback when the function throw an error
+    -- "command" must be a variable, so write it
     else
-        self:write_variable (' type(' .. command .. ') == "function" and ' .. command .. '() or ' .. command .. ' ')
+        self:write_variable (command)
     end
 end
 
@@ -670,8 +669,6 @@ function Wings:write (x)
         end
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
-    elseif type(x) == 'function' then
-       self:write(x())
     end
 end
 

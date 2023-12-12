@@ -26,8 +26,6 @@ function Wings:write (x)
         end
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
-    elseif type(x) == 'function' then
-       self:write(x())
     end
 end
 

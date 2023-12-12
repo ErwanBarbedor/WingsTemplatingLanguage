@@ -1,6 +1,6 @@
 
 #-- TEST : simple macro
-#macro foo bar #end #foo
+#macro foo bar #end #foo()
 #-- RESULT
   bar 
 #-- END
@@ -65,20 +65,8 @@ bar space bar
 
 #-- END
 
-#-- TEST : macro with named args 6
-#macro foo bar #end
-#macro cat(x=#foo)
-    #x
-#end
-#cat()
-#-- RESULT
-
- bar 
-
-#-- END
-
 #-- TEST : simple function
-#function foo return "bar" #end #foo
+#function foo return "bar" #end #foo()
 #-- RESULT
  bar
 #-- END
@@ -135,17 +123,6 @@ foofoo
 #cat()
 #-- RESULT
 bar space bar
-#-- END
-
-#-- TEST : function with named args 6
-#macro foo bar #end
-#function cat(x=#foo)
-    return x
-#end
-#cat()
-#-- RESULT
-
- bar 
 #-- END
 
 #-- TEST : function with named args 7

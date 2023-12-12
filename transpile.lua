@@ -498,9 +498,8 @@ function Wings.transpiler:handle_macro_call (command)
 
         table.insert(self.stack, {name="begin-sugar", macro=command})
     
-    -- Implicite function call.
-    -- Cumbersome, but a way to have function name in traceback when the function throw an error
+    -- "command" must be a variable, so write it
     else
-        self:write_variable (' type(' .. command .. ') == "function" and ' .. command .. '() or ' .. command .. ' ')
+        self:write_variable (command)
     end
 end

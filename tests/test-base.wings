@@ -60,7 +60,7 @@ foo
 
 #-- TEST : import 2
 #import(lib)
-#foo
+#foo()
 #-- RESULT
 
  bar 
