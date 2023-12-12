@@ -35,7 +35,7 @@ bar
 #end
 #-- RESULT
 
- <foo
+<foo
 > #-- END
 
 #-- TEST : begin sugar 2
@@ -45,7 +45,7 @@ bar
 #end
 #-- RESULT
 
- <bar:
+<bar:
 foo
 > #-- END
 

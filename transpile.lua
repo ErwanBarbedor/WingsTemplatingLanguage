@@ -425,9 +425,9 @@ function Wings.transpiler:handle_new_function (ismacro)
     -- Declare a new function. If is not a macro, open a lua code chunck
     local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
     self.line = self.line:sub((#space+#name)+1, -1)
-    local args = self.line:match('^%b()')
+    local args, spaces = self.line:match('^(%b())(%s*)')
     if args then
-        self.line = self.line:sub(#args+1, -1)
+        self.line = self.line:sub(#args+#spaces+1, -1)
     else
         args = "()"
     end

@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2184)
+Wings v1.0.0-dev (build 2191)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2184)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2191)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -575,9 +575,9 @@ function Wings.transpiler:handle_new_function (ismacro)
     -- Declare a new function. If is not a macro, open a lua code chunck
     local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
     self.line = self.line:sub((#space+#name)+1, -1)
-    local args = self.line:match('^%b()')
+    local args, spaces = self.line:match('^(%b())(%s*)')
     if args then
-        self.line = self.line:sub(#args+1, -1)
+        self.line = self.line:sub(#args+#spaces+1, -1)
     else
         args = "()"
     end
