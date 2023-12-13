@@ -50,12 +50,12 @@ function Wings.transpiler:write_functiondef_info (name, info)
     table.insert(self.chunck, '\n'..self.indent..'wings.function_args_info[' .. name .. '] = ' .. info)
 end
 
-function Wings.transpiler:write_functioncall_init (stack_len)
+function Wings.transpiler:write_functioncall_begin (stack_len)
     -- Create the table used to store function arguments
     table.insert(self.chunck, '\n' .. self.indent .. 'wings._args' .. stack_len .. ' = {}\n')
 end
 
-function Wings.transpiler:write_functioncall_final (s, stack_len, direct)
+function Wings.transpiler:write_functioncall_end (s, stack_len, direct)
     -- Call the function and write the result.
     -- Handle named argument and defaut values.
     -- direct : called without argument.

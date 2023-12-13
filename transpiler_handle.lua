@@ -42,7 +42,7 @@ function Wings.transpiler:handle_inside_call (command)
             table.insert(self.stack, {name="begin-sugar", macro=self.top.macro})
         else
             self:write_functioncall_arg_end ()
-            self:write_functioncall_final (self.top.macro, #self.stack)
+            self:write_functioncall_end (self.top.macro, #self.stack)
 
             table.remove(self.stack)
         end
@@ -176,7 +176,7 @@ function Wings.transpiler:handle_end_keyword ()
 
     if self.top.name == "begin-sugar" then
         self:write_functioncall_arg_end ()
-        self:write_functioncall_final (self.top.macro, #self.stack+1)
+        self:write_functioncall_end (self.top.macro, #self.stack+1)
     else
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
@@ -203,7 +203,7 @@ function Wings.transpiler:handle_macro_call (command)
 
     if self.line:match('^%(%s*%)') and not is_begin_sugar then
         self.line = self.line:gsub('^%(%s*%)', '')
-        self:write_functioncall_final (command, #self.stack, true)
+        self:write_functioncall_end (command, #self.stack, true)
     
     elseif self.line:match('^%' .. self.patterns.open_call) then
         self.line = self.line:sub(2, -1)
@@ -211,12 +211,12 @@ function Wings.transpiler:handle_macro_call (command)
         table.insert(self.stack, {name="call", deep=1, is_begin_sugar=is_begin_sugar, macro=command})
         
         local name = self:capture_functioncall_named_arg ()
-        self:write_functioncall_init (#self.stack) -- pass stack len to create a unique id 
+        self:write_functioncall_begin (#self.stack) -- pass stack len to create a unique id 
         self:write_functioncall_arg_begin (name, #self.stack)
 
     -- Duplicate code with arg_separator check
     elseif is_begin_sugar then
-        self:write_functioncall_init (#self.stack)
+        self:write_functioncall_begin (#self.stack)
         self:write_functioncall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
 
         table.insert(self.stack, {name="begin-sugar", macro=command})
