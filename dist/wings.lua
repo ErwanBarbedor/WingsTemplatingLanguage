@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2322)
+Wings v1.0.0-dev (build 2325)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2322)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2325)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -1019,7 +1019,7 @@ function Wings:render(code, filename)
     table.insert(self.filestack, {filename=name, code=code, luacode=luacode})
 
     if self.SAVE_LUACODE_DIR then
-        filename = (filename or name:gsub('[<>]', '_')):gsub('@wings$', '')
+        filename = (filename or name:gsub('[<>]', '_')):gsub('@wings$', ''):gsub('/', '___')
         local path = self.SAVE_LUACODE_DIR .. '/' .. filename .. '.lua'
         local file = io.open(path, "w")
         if file then
