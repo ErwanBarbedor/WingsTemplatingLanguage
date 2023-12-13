@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2325)
+Wings v1.0.0-dev (build 2330)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -20,11 +20,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 local cli_help = [=[
 Usage :
-    lua wings.lua -h --help
+    WINGS -h --help
         Show this help
-    lua wings.lua -v --version
+    WINGS -v --version
     	Show the wings version
-    lua wings.lua -i --input input [-o --output output] [-l --luacode path]
+    WINGS -i --input input [-o --output output] [-l --luacode path]
         input: file to handle
         output: if provided, save wings output in this location. If not, print the result.
         lua: if provided, save transpiled code in given directory
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2325)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2330)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -1079,9 +1079,10 @@ end
 
 
 
--- Assume that, if the first arg is "wings.lua", we are
+-- Assume that, if the first arg is "wings.lua" or "wings", we are
 -- directly called from the command line
-if arg[0]:match('[^/]*$') == 'wings.lua' then
+local first_arg_name = arg[0]:match('[^/]*$')
+if first_arg_name == 'wings.lua' or first_arg_name == 'wings' then
 
 	local cli_parameters = {
 		input=true,
@@ -1146,7 +1147,13 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 	end
 
 	if cli_args.help then
-		print(cli_help)
+		local help
+		if first_arg_name == 'wings.lua' then
+			help = cli_help:gsub('WINGS', 'lua wings.lua')
+		else
+			help = cli_help:gsub('WINGS', 'wings')
+		end
+		print(help)
 	elseif cli_args.version then
 		print(Wings._VERSION)
 	elseif not cli_args.input then
