@@ -3,16 +3,18 @@
 versions=(51 52 53 54 jit)
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+cd $script_dir
+
 echo "Passing wings test for all lua version. (dev version)" #for error location
 for v in "${versions[@]}"
 do
     printf "\tlua%s : " "$v"
-    eval "lua$v $script_dir/tests/test.lua --run --fullog --wings $script_dir/wings --test $script_dir/tests/"
+    eval "lua$v tests/test.lua --run --fullog --wings wings --test tests/"
 done
 
 echo "Passing wings test for all lua version. (dist version)"
 for v in "${versions[@]}"
 do
     printf "\tlua%s : " "$v"
-    eval "lua$v $script_dir/tests/test.lua --run --log --wings $script_dir/dist/wings --test $script_dir/tests/"
+    eval "lua$v tests/test.lua --run --log --wings dist/wings --test tests/"
 done

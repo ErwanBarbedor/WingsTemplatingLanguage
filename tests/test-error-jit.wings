@@ -1,0 +1,28 @@
+#-- TEST : unknow macro
+#foo()
+#-- ERROR
+file "tests/", line 1 (lua 5) : attempt to call global 'foo' (a nil value)
+#-- END
+
+#-- TEST : nested unknow macro 1
+#macro foo
+  #bar()
+#end
+#foo()
+#-- ERROR
+file "tests/", line 2 (lua 9) : attempt to call global 'bar' (a nil value)
+    file "tests/", line 4 (lua 18) : in main chunk
+#-- END
+
+#-- TEST 54: nested unknow macro 2
+#macro bar
+  #baz()
+#end
+#macro foo
+  #bar()
+#end
+#foo()
+#-- ERROR
+file "tests/", line 2 (lua 9) : attempt to call global 'baz' (a nil value)
+    file "tests/", line 7 (lua 31) : in main chunk
+#-- END

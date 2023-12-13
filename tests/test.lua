@@ -1,103 +1,11 @@
-local function copy( t )
-    local ct = {}
-    for i,v in ipairs(t) do
-        ct[i] = t[i]
-    end
-    return ct
-end
+-- local function copy( t )
+--     local ct = {}
+--     for i,v in ipairs(t) do
+--         ct[i] = t[i]
+--     end
+--     return ct
+-- end
 
-local function string_diff (a, b)
-    local deltas = {
-        {a=1, b=1, insert=0, remove=0}
-    }
-
-    local open = 1
-    while open > 0 do
-        open = 0
-        for _, delta in ipairs(deltas) do
-            local new_deltas = {}
-            if delta.a <= #a and delta.b <= #b then
-                local ia = delta.a
-                local ib = delta.b
-
-                if a:sub(ia, ia) ~= b:sub(ib, ib) then
-                    local delta_rm = copy(delta)
-
-                    table.insert(delta, {"insert", b:sub(ib, ib)})
-
-                    delta.a = ia
-                    delta.b = ib+1
-                    delta.insert = delta.insert + 1
-
-                    table.insert(delta_rm, {"remove", a:sub(ib, ib)})
-                    delta_rm.a = ia+1
-                    delta_rm.b = ib
-                    delta_rm.remove = delta.remove + 1
-                    delta_rm.insert = delta.insert
-
-                    table.insert (new_deltas, delta)
-                    table.insert (new_deltas, delta_rm)
-                else
-                    table.insert(delta, {"pass", b:sub(ib, ib)})
-
-                    delta.a = ia+1
-                    delta.b = ib+1
-                end
-                open = open + 1
-            else
-                table.insert (new_deltas, delta)
-            end
-        end
-    end
-
-    for _, delta in ipairs(deltas) do
-        if delta.a <= #a and delta.b > #b then
-            table.insert(delta, {"remove", a:sub(delta.a, -1)})
-        elseif delta.a > #a and delta.b <= #b then 
-            table.insert(delta, {"insert", b:sub(delta.b, -1)})
-        end
-    end
-
-    local diff = deltas[1]
-
-    for _, delta in ipairs(deltas) do
-        if delta.remove + delta.insert < diff.insert + diff.remove then
-            diff = delta
-        end
-    end
-
-    return diff
-end
-
-local function print_diff (a, b)
-    local diff = string_diff(a, b)
-
-    local mode = 'pass'
-    for _, v in ipairs(diff) do
-        if v[1] == 'pass' then
-            if mode ~= 'pass' then
-                io.write('\27[0m')
-            end
-            io.write(v[2])
-        elseif v[1] == 'remove' then
-            if mode ~= 'remove' then
-                io.write('\27[41m')
-            end
-            local v2 = v[2]:gsub('\n', '\\n\27[0m\n\27[41m'):gsub('\t', '\\t')
-            io.write(v2)
-
-        elseif v[1] == 'insert' then
-            if mode ~= 'insert' then
-                io.write('\27[42m')
-            end
-            local v2 = v[2]:gsub('\n', '\\n\27[0m\n\27[42m'):gsub('\t', '\\t\t')
-            io.write(v2)
-        end
-
-        mode = v[1]
-    end
-    io.write '\27[0m\n'
-end
 
 local function test(wings_path, test_path, simplelog, fullog)
     -- local testdir  = arg[1]
@@ -114,8 +22,18 @@ local function test(wings_path, test_path, simplelog, fullog)
 
     local log = simplelog or fullog
 
-    for name in ("base scope call struct"):gmatch('%S+') do
-        local tests = io.open(test_path .. "test-" .. name .. ".wings"):read'*a'
+    local list = "base scope call struct"
+
+    if jit then
+        list = list .. " error-jit"
+    elseif (_VERSION == "Lua 5.1" or _VERSION == "Lua 5.2") then
+        list = list .. " error-51"
+    elseif (_VERSION == "Lua 5.3" or _VERSION == "Lua 5.4") then
+        list = list .. " error-53"
+    end
+
+    for testname in list:gmatch('%S+') do
+        local tests = io.open(test_path .. "test-" .. testname .. ".wings"):read'*a'
         for test in tests:gmatch('#%-%- TEST : .-#%-%- END') do
             local wingscode = {}
             local result    = {}
@@ -123,10 +41,14 @@ local function test(wings_path, test_path, simplelog, fullog)
             test = test:gsub('#%-%- TEST : [^\n]*\n', ''):gsub('#%-%- END', '')
 
             local in_code = true
+            local check_error = false
 
             for line in test:gmatch('[^\n]*\n?') do
                 if line == '#-- RESULT\n' then
                     in_code = false
+                elseif line == '#-- ERROR\n' then
+                    in_code = false
+                    check_error = true
                 elseif in_code then
                     table.insert(wingscode, line)
                 else
@@ -142,18 +64,21 @@ local function test(wings_path, test_path, simplelog, fullog)
             local soutput
             if sucess then
                 soutput = output:tostring()
+            elseif check_error then
+                soutput = output:gsub('^.-:.-:%s*', ''):gsub('\t','    ')..'\n'
             end
 
             n_test = n_test + 1
-            if not sucess then
+            if not sucess and not check_error then
                 if fullog then
                     print('Test ' .. name .. ' failed with error:' .. output)
                 end
             elseif soutput ~= result then
                 if fullog then
-                    print('Test ' .. name .. ' failed :')
-                    print_diff (result, soutput)
+                    print('Test ' .. testname .. ' > ' .. name .. ' failed. Obtain')
                     print('[[' .. soutput .. ']]')
+                    print('Instead of')
+                    print('[[' .. result .. ']]')
                 end
             else
                 n_sucess = n_sucess + 1
