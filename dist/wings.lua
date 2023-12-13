@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2237)
+Wings v1.0.0-dev (build 2243)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,10 +32,12 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2237)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2243)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
+-- Is wings launched from the commande line?
+Wings.STANDALONE = false
 
 
 Wings.utils = {}
@@ -114,7 +116,6 @@ function Wings.utils.convert_noline (filestack, line)
 end
 
 function Wings.utils.error (msg)
-    print("Wings failed with this error : ")
     print(msg)
 
     for pattern, f in pairs(Wings.utils.ERROR_HELP) do
@@ -123,7 +124,13 @@ function Wings.utils.error (msg)
             f(m)
         end
     end
-    os.exit()
+
+    if Wings.STANDALONE then
+        print("Wings failed to build the document.")
+        os.exit(-1)
+    else
+        error("Wings failed to build the document.")
+    end
 end
 
 -- Predefined list of standard Lua variables/functions for various versions
@@ -429,8 +436,8 @@ end
 
 function Wings.transpiler:write_variable_or_function(s)
     -- Handle variable that may be added to the output by Wings
-    -- Handle implicit function call. (not inside wings:write() to keep)
-    -- the function name in case of error.
+    -- Handle implicit function call. (not inside wings:write() to keep
+    -- the function name in case of error.)
     if #s > 0 then
         table.insert(self.chunck, '\n'.. self.indent .. 'if type(' .. s .. ') == "function" then')
         table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. "(wings:make_args_list (".. s ..", {})))")
@@ -1005,6 +1012,7 @@ function Wings:new ()
     wings.WINGS_ERROR_HANDLING = true
     -- Path to save transpiled code
     wings.SAVE_LUACODE_DIR = false
+    
     -- Store function information
     wings.function_args_info = setmetatable({}, {__mode="k"})
     
@@ -1109,6 +1117,7 @@ end
 -- Assume that, if the first arg is "wings.lua", we are
 -- directly called from the command line
 if arg[0]:match('[^/]*$') == 'wings.lua' then
+	Wings.STANDALONE = true
 
 	local cli_parameters = {
 		input=true,
