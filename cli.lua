@@ -36,7 +36,6 @@ Usage :
 -- Assume that, if the first arg is "wings.lua", we are
 -- directly called from the command line
 if arg[0]:match('[^/]*$') == 'wings.lua' then
-	Wings.STANDALONE = true
 
 	local cli_parameters = {
 		input=true,
@@ -109,7 +108,23 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 	else
 		wings = Wings:new ()
 		wings.SAVE_LUACODE_DIR = cli_args.luacode
-		local result = wings:renderFile(cli_args.input):tostring ()
+		local sucess, result = pcall (wings.renderFile, wings, cli_args.input)
+
+		if not sucess then
+			print(result)
+
+			-- Print hint to solve errors
+			for pattern, f in pairs(Wings.utils.ERROR_HELP) do
+		        local m = result:match(pattern)
+		        if m then
+		            f(m)
+		        end
+		    end
+		    
+			os.exit ()
+		end
+
+		result = result:tostring ()
 
 		if cli_args.output then
 			if #result > 0 then

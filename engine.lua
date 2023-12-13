@@ -130,7 +130,6 @@ function Wings:format_error (err)
     end)
 
     return traceback
-    -- error('#VERSION: ' .. name .. ':' .. noline_wings .. ':' .. err)
 end
 
 function Wings:filename ()

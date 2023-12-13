@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2243)
+Wings v1.0.0-dev (build 2246)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,12 +32,10 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2243)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2246)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
--- Is wings launched from the commande line?
-Wings.STANDALONE = false
 
 
 Wings.utils = {}
@@ -112,24 +110,6 @@ function Wings.utils.convert_noline (filestack, line)
         return indent .. 'file "' .. filename .. '", line ' .. noline_wings .. " (lua "..noline..") :" .. message
     else
         return line
-    end
-end
-
-function Wings.utils.error (msg)
-    print(msg)
-
-    for pattern, f in pairs(Wings.utils.ERROR_HELP) do
-        local m = msg:match(pattern)
-        if m then
-            f(m)
-        end
-    end
-
-    if Wings.STANDALONE then
-        print("Wings failed to build the document.")
-        os.exit(-1)
-    else
-        error("Wings failed to build the document.")
     end
 end
 
@@ -827,7 +807,6 @@ function Wings:format_error (err)
     end)
 
     return traceback
-    -- error('#VERSION: ' .. name .. ':' .. noline_wings .. ':' .. err)
 end
 
 function Wings:filename ()
@@ -1043,8 +1022,6 @@ function Wings:render(code, filename)
     -- Transpile the code, then execute it and return the result
     local luacode = self.transpiler:transpile (code)
 
-    
-
     if filename then
         name = filename .. "@wings"
     else
@@ -1089,7 +1066,7 @@ function Wings:render(code, filename)
     end)
 
     if not sucess then
-        self.utils.error(result, -1)
+        error(result)
     end
 
     result.luacode = luacode
@@ -1117,7 +1094,6 @@ end
 -- Assume that, if the first arg is "wings.lua", we are
 -- directly called from the command line
 if arg[0]:match('[^/]*$') == 'wings.lua' then
-	Wings.STANDALONE = true
 
 	local cli_parameters = {
 		input=true,
@@ -1190,7 +1166,23 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 	else
 		wings = Wings:new ()
 		wings.SAVE_LUACODE_DIR = cli_args.luacode
-		local result = wings:renderFile(cli_args.input):tostring ()
+		local sucess, result = pcall (wings.renderFile, wings, cli_args.input)
+
+		if not sucess then
+			print(result)
+
+			-- Print hint to solve errors
+			for pattern, f in pairs(Wings.utils.ERROR_HELP) do
+		        local m = result:match(pattern)
+		        if m then
+		            f(m)
+		        end
+		    end
+		    
+			os.exit ()
+		end
+
+		result = result:tostring ()
 
 		if cli_args.output then
 			if #result > 0 then

@@ -26,8 +26,6 @@ Wings._VERSION = "#VERSION"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
--- Is wings launched from the commande line?
-Wings.STANDALONE = false
 
 -- <TO REMOVE
 -- Utils function to split main file in chunck.
@@ -120,8 +118,6 @@ function Wings:render(code, filename)
     -- Transpile the code, then execute it and return the result
     local luacode = self.transpiler:transpile (code)
 
-    
-
     if filename then
         name = filename .. "@wings"
     else
@@ -166,7 +162,7 @@ function Wings:render(code, filename)
     end)
 
     if not sucess then
-        self.utils.error(result, -1)
+        error(result)
     end
 
     result.luacode = luacode

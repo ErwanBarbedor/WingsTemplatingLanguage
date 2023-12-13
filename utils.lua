@@ -86,24 +86,6 @@ function Wings.utils.convert_noline (filestack, line)
     end
 end
 
-function Wings.utils.error (msg)
-    print(msg)
-
-    for pattern, f in pairs(Wings.utils.ERROR_HELP) do
-        local m = msg:match(pattern)
-        if m then
-            f(m)
-        end
-    end
-
-    if Wings.STANDALONE then
-        print("Wings failed to build the document.")
-        os.exit(-1)
-    else
-        error("Wings failed to build the document.")
-    end
-end
-
 -- Predefined list of standard Lua variables/functions for various versions
 Wings.utils.LUA_STD_FUNCTION = {
     ["5.1"]="_VERSION arg assert collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall",
