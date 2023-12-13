@@ -221,8 +221,8 @@ function Wings.transpiler:handle_macro_call (command)
 
         table.insert(self.stack, {name="begin-sugar", macro=command})
     
-    -- "command" must be a variable, so write it
+    -- "command" may be a variable, or an implicit function call
     else
-        self:write_variable (command)
+        self:write_variable_or_function (command)
     end
 end

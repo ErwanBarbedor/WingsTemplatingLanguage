@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2235)
+Wings v1.0.0-dev (build 2236)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2235)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2236)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -405,6 +405,7 @@ function Wings.transpiler:capture_syntax_feature (capture)
 
     return false
 end
+
 -- All 'write' functions don't modify the line 
 function Wings.transpiler:write_text (s)
     -- Handle text that may be added to the output by Wings
@@ -426,10 +427,16 @@ function Wings.transpiler:write_lua (s, toindent)
     table.insert(self.chunck, s)
 end
 
-function Wings.transpiler:write_variable(s)
+function Wings.transpiler:write_variable_or_function(s)
     -- Handle variable that may be added to the output by Wings
+    -- Handle implicit function call. (not inside wings:write() to keep)
+    -- the function name in case of error.
     if #s > 0 then
-        table.insert(self.chunck, '\n'.. self.indent .. "wings:write (" .. s .. ")")
+        table.insert(self.chunck, '\n'.. self.indent .. 'if type(' .. s .. ') == "function" then')
+        table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. "(wings:make_args_list (".. s ..", {})))")
+        table.insert(self.chunck, '\n'.. self.indent .. 'else')
+        table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. ")")
+        table.insert(self.chunck, '\n'.. self.indent .. 'end')
     end
 end
 
@@ -476,6 +483,8 @@ function Wings.transpiler:write_functioncall_arg_end ()
     table.insert(self.chunck, '\n' .. self.indent .. 'end)())')
     self:increment_indent ()
 end
+
+-- Handle all transpiler behaviors
 function Wings.transpiler:handle_inside_call (command)
 
     -- check brace nested deep
@@ -685,9 +694,9 @@ function Wings.transpiler:handle_macro_call (command)
 
         table.insert(self.stack, {name="begin-sugar", macro=command})
     
-    -- "command" must be a variable, so write it
+    -- "command" may be a variable, or an implicit function call
     else
-        self:write_variable (command)
+        self:write_variable_or_function (command)
     end
 end
 
