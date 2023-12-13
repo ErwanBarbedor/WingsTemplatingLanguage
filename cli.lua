@@ -36,6 +36,7 @@ Usage :
 -- Assume that, if the first arg is "wings.lua", we are
 -- directly called from the command line
 if arg[0]:match('[^/]*$') == 'wings.lua' then
+	Wings.STANDALONE = true
 
 	local cli_parameters = {
 		input=true,

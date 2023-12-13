@@ -87,7 +87,6 @@ function Wings.utils.convert_noline (filestack, line)
 end
 
 function Wings.utils.error (msg)
-    print("Wings failed with this error : ")
     print(msg)
 
     for pattern, f in pairs(Wings.utils.ERROR_HELP) do
@@ -96,7 +95,13 @@ function Wings.utils.error (msg)
             f(m)
         end
     end
-    os.exit()
+
+    if Wings.STANDALONE then
+        print("Wings failed to build the document.")
+        os.exit(-1)
+    else
+        error("Wings failed to build the document.")
+    end
 end
 
 -- Predefined list of standard Lua variables/functions for various versions

@@ -26,6 +26,8 @@ Wings._VERSION = "#VERSION"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
+-- Is wings launched from the commande line?
+Wings.STANDALONE = false
 
 -- <TO REMOVE
 -- Utils function to split main file in chunck.
@@ -87,6 +89,7 @@ function Wings:new ()
     wings.WINGS_ERROR_HANDLING = true
     -- Path to save transpiled code
     wings.SAVE_LUACODE_DIR = false
+    
     -- Store function information
     wings.function_args_info = setmetatable({}, {__mode="k"})
     
