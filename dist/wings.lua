@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2320)
+Wings v1.0.0-dev (build 2322)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2320)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2322)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -124,18 +124,6 @@ Wings.utils.LUA_STD_FUNCTION = {
     ["5.4"]="_VERSION arg assert collectgarbage coroutine debug dofile error getmetatable io ipairs load loadfile math next os package pairs pcall print rawequal rawget rawlen rawset require select setmetatable string table tonumber tostring type utf8 warn xpcall",
 
     jit="_VERSION arg assert bit collectgarbage coroutine debug dofile error gcinfo getfenv getmetatable io ipairs jit load loadfile loadstring math module newproxy next os package pairs pcall print rawequal rawget rawset require select setfenv setmetatable string table tonumber tostring type unpack xpcall"
-}
-
-
--- For certains errors, give hint to new users
-
-Wings.utils.ERROR_HELP = {
-	["attempt to call a nil value %(.- '([%w_]+)'%)"] = function (m)
-		print('Hints:')
-		print('\t- Check if "' .. m .. '" is spelled correctly.')
-		print('\t- If "' .. m .. '" is part of an external code, check if you have loaded the required library with "import" or "require".')
-		print('\t- Else, make sure you have defined "' .. m .. '" as a macro or a function.')
-	end
 }
 
 Wings.transpiler = {}
@@ -1170,15 +1158,6 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 
 		if not sucess then
 			print(result)
-
-			-- Print hint to solve errors
-			for pattern, f in pairs(Wings.utils.ERROR_HELP) do
-		        local m = result:match(pattern)
-		        if m then
-		            f(m)
-		        end
-		    end
-		    
 			os.exit ()
 		end
 

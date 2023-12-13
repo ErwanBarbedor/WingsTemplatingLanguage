@@ -20,7 +20,7 @@ print("Creating wings.lua...")
 local wings   = io.open 'wings.lua':read '*a'
 local version = 'Wings v1.0.0'
 local dev   = true
-local devn = 2321
+local devn = 2323
 
 -- If in developpement, make the version number unic.
 if dev then

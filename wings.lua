@@ -44,7 +44,6 @@ end
 -- TO REMOVE>
 
 include 'utils'
-include 'error-help'
 
 Wings.transpiler = {}
 include 'patterns'

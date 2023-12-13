@@ -112,15 +112,6 @@ if arg[0]:match('[^/]*$') == 'wings.lua' then
 
 		if not sucess then
 			print(result)
-
-			-- Print hint to solve errors
-			for pattern, f in pairs(Wings.utils.ERROR_HELP) do
-		        local m = result:match(pattern)
-		        if m then
-		            f(m)
-		        end
-		    end
-		    
 			os.exit ()
 		end
 
