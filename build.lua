@@ -20,7 +20,7 @@ print("Creating wings.lua...")
 local wings   = io.open 'wings.lua':read '*a'
 local version = 'Wings v1.0.0'
 local dev   = true
-local devn = 2234
+local devn = 2236
 
 -- If in developpement, make the version number unic.
 if dev then
@@ -35,7 +35,7 @@ wings = wings:gsub('#VERSION', version)
 
 -- Replace include with file content
 wings = wings:gsub('\n%-%- <TO REMOVE.-%-%- TO REMOVE>\n', '')
-wings = wings:gsub('include \'([%w%-]+)\'', function(m)
+wings = wings:gsub('include \'([%w%-_]+)\'', function(m)
     return io.open(m .. '.lua'):read '*a':gsub('^.-%]%]', '')
 end)
 

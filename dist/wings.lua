@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2233)
+Wings v1.0.0-dev (build 2235)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2233)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2235)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -147,7 +147,7 @@ Wings.utils.ERROR_HELP = {
 		print('Hints:')
 		print('\t- Check if "' .. m .. '" is spelled correctly.')
 		print('\t- If "' .. m .. '" is part of an external code, check if you have loaded the required library with "import" or "require".')
-		print('\t- Else, make sure you have defined "' .. m .. '" as macro or a function.')
+		print('\t- Else, make sure you have defined "' .. m .. '" as a macro or a function.')
 	end
 }
 
@@ -352,6 +352,59 @@ function Wings.transpiler:decrement_indent ()
     self.indent = self.indent:gsub(self.patterns.indent .. '$', '')
 end
 
+-- capture function modify the line
+function Wings.transpiler:capture_functioncall_named_arg ()
+    -- In the begining of an argument, check if it is a named argument.
+
+    local name = self.line:match('^%s*%w+=')
+
+    if name then
+        self.line = self.line:sub(#name+1, -1)
+    end
+
+    return (name or ''):match('%w+')
+end
+
+function Wings.transpiler:capture_syntax_feature (capture)
+    -- Handle Wings syntax.
+    -- Return true is the line loop must be stop
+
+    -- The command could be keyword, a commentary or an opening.
+    local command
+    if capture == self.patterns.escape then
+        command = self.line:match ('^'  .. self.patterns.identifier)
+               or self.line:match ('^'  .. self.patterns.comment)
+               or self.line:match ('^%' .. self.patterns.open_call)
+
+        self.line = self.line:sub(#command+1, -1)
+    else
+        command = capture
+    end
+
+    -- Manage call first
+    if  (command == self.patterns.open_call or command == self.patterns.close_call)
+        and
+        (self.top.name == 'call' or self.top.name == "lua-inline") then
+
+        self:handle_inside_call (command)
+
+    elseif command == self.patterns.arg_separator and self.top.name == 'call' then
+        -- Inside a call, push a new argument
+        self:write_functioncall_arg_end ()
+        self:decrement_indent ()
+        local name = self:capture_functioncall_named_arg ()
+        self:write_functioncall_arg_begin (name, #self.stack)
+    
+    elseif self.top.lua then
+        -- this is lua code
+        self:handle_lua_code (command)
+    else
+        -- this is wings code
+        return self:handle_wings_code (command)
+    end
+
+    return false
+end
 -- All 'write' functions don't modify the line 
 function Wings.transpiler:write_text (s)
     -- Handle text that may be added to the output by Wings
@@ -423,61 +476,6 @@ function Wings.transpiler:write_functioncall_arg_end ()
     table.insert(self.chunck, '\n' .. self.indent .. 'end)())')
     self:increment_indent ()
 end
-
--- capture function modify the line
-function Wings.transpiler:capture_functioncall_named_arg ()
-    -- In the begining of an argument, check if it is a named argument.
-
-    local name = self.line:match('^%s*%w+=')
-
-    if name then
-        self.line = self.line:sub(#name+1, -1)
-    end
-
-    return (name or ''):match('%w+')
-end
-
-function Wings.transpiler:capture_syntax_feature (capture)
-    -- Handle Wings syntax.
-    -- Return true is the line loop must be stop
-
-    -- The command could be keyword, a commentary or an opening.
-    local command
-    if capture == self.patterns.escape then
-        command = self.line:match ('^'  .. self.patterns.identifier)
-               or self.line:match ('^'  .. self.patterns.comment)
-               or self.line:match ('^%' .. self.patterns.open_call)
-
-        self.line = self.line:sub(#command+1, -1)
-    else
-        command = capture
-    end
-
-    -- Manage call first
-    if  (command == self.patterns.open_call or command == self.patterns.close_call)
-        and
-        (self.top.name == 'call' or self.top.name == "lua-inline") then
-
-        self:handle_inside_call (command)
-
-    elseif command == self.patterns.arg_separator and self.top.name == 'call' then
-        -- Inside a call, push a new argument
-        self:write_functioncall_arg_end ()
-        self:decrement_indent ()
-        local name = self:capture_functioncall_named_arg ()
-        self:write_functioncall_arg_begin (name, #self.stack)
-    
-    elseif self.top.lua then
-        -- this is lua code
-        self:handle_lua_code (command)
-    else
-        -- this is wings code
-        return self:handle_wings_code (command)
-    end
-
-    return false
-end
-
 function Wings.transpiler:handle_inside_call (command)
 
     -- check brace nested deep
@@ -692,6 +690,7 @@ function Wings.transpiler:handle_macro_call (command)
         self:write_variable (command)
     end
 end
+
 
 
 -- Functions used by Wings in the final code to manage text flow and macro calls.

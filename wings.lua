@@ -48,7 +48,10 @@ include 'error-help'
 
 Wings.transpiler = {}
 include 'patterns'
-include 'transpile'
+include 'transpiler'
+include 'transpiler_write'
+include 'transpiler_handle'
+
 include 'engine'
 include 'token'
 Wings.std = {}
