@@ -19,6 +19,6 @@ Wings.utils.ERROR_HELP = {
 		print('Hints:')
 		print('\t- Check if "' .. m .. '" is spelled correctly.')
 		print('\t- If "' .. m .. '" is part of an external code, check if you have loaded the required library with "import" or "require".')
-		print('\t- Else, make sure you have defined "' .. m .. '" as macro or a function.')
+		print('\t- Else, make sure you have defined "' .. m .. '" as a macro or a function.')
 	end
 }
