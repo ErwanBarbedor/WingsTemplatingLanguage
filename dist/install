@@ -5,15 +5,11 @@ show_help() {
   echo "Usage: $0 [options]"
   echo "Options:"
   echo "  -i, --interpreter  Set the lua interpreter name (default: lua)"
-  echo "  -h, --help      Show this help message and exit"
+  echo "  -h, --help        Show this help message and exit"
 }
 
-
-# Default installation path, typically for user-installed programs
 INSTALL_PATH="/usr/local/bin"
-# Default lua interpreter
 INTERPRETER="lua"
-
 
 # Parse command line options
 while [[ "$#" -gt 0 ]]; do
@@ -40,14 +36,9 @@ fi
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
-# Copy the lua script to the installation path and rename it
+# Copy the lua script to the installation path
 cp "$SCRIPT_DIR/wings.lua" "$INSTALL_PATH/wings"
-
-# Change permissions to make it executable
 chmod +x "$INSTALL_PATH/wings"
-
-# Add the shebang to execute it with the chosen interpreter
 sed -i "1i#!/usr/bin/env $INTERPRETER" "$INSTALL_PATH/wings"
 
-# Success message
 echo "Installation succeeded. You can now run 'wings' from any terminal."
