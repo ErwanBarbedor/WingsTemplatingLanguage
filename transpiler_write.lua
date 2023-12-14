@@ -39,9 +39,14 @@ function Wings.transpiler:write_variable(s)
     end
 end
 
-function Wings.transpiler:write_functiondef_info (name, info)
+function Wings.transpiler:write_functiondef_info (name, info, isstruct)
     -- store function args names and defauts values
-    table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. '}')
+    table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. ', ')
+    if isstruct then
+        table.insert(self.chunck, ('kind = "struct"}'))
+    else
+        table.insert(self.chunck, ('kind = "macro"}'))
+    end
 end
 
 function Wings.transpiler:write_functioncall_begin (stack_len)

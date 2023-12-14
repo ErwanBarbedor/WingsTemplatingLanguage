@@ -101,8 +101,8 @@ function Wings.transpiler:handle_wings_code (command)
         self:write_lua ('\n' .. self.indent .. '-- Begin raw lua code\n', true)
 
     -- New macro
-    elseif command == "lmacro" or command == "macro" then
-        self:handle_new_function (command == "macro")
+    elseif command == "lmacro" or command == "macro" or command == "struct" or command == "lstruct" then
+        self:handle_new_function (command:sub(1, 1) ~= "l", command:match('struct$'))
         
     -- Open a lua chunck for iterator / condition
     elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
@@ -144,7 +144,7 @@ function Wings.transpiler:handle_wings_code (command)
     end
 end
 
-function Wings.transpiler:handle_new_function (ismacro)
+function Wings.transpiler:handle_new_function (ismacro, isstruct)
     -- Declare a new function. If is not a macro, it is a function, so open a lua code chunck
     local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
     self.line = self.line:sub((#space+#name)+1, -1)
@@ -162,9 +162,9 @@ function Wings.transpiler:handle_new_function (ismacro)
 
     if ismacro then
         self:write_lua ('\n' .. self.indent .. 'wings:push()')
-        table.insert(self.stack, {name="macro", args=args_info, fname=name, line=self.noline})
+        table.insert(self.stack, {name="macro", args=args_info, fname=name, line=self.noline, isstruct=isstruct})
     else
-        table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name, line=self.noline})
+        table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name, line=self.noline, isstruct=isstruct})
     end     
 end
 
@@ -184,7 +184,7 @@ function Wings.transpiler:handle_end_keyword ()
 
     -- save macro arguments info
     if self.top.name == 'macro' then
-        self:write_functiondef_info (self.top.fname, self.top.args)
+        self:write_functiondef_info (self.top.fname, self.top.args, self.top.isstruct)
     end
 end
 
