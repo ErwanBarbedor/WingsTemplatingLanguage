@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2403)
+Wings v1.0.0-dev (build 2405)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2403)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2405)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -430,7 +430,7 @@ function Wings.transpiler:write_functioncall_end (s, stack_len, direct)
     -- direct : called without argument.
 
     if direct then
-         table.insert(self.chunck, '\n' .. self.indent
+        table.insert(self.chunck, '\n' .. self.indent
             .. 'wings:write(' .. s .. '(wings:make_args_list ('.. s ..', {})))')
     else
         table.insert(self.chunck, '\n' .. self.indent
@@ -453,14 +453,13 @@ end
 function Wings.transpiler:write_functioncall_arg_end (isstruct)
     -- Closing args function
     table.insert(self.chunck, '\n' .. self.indent .. 'return wings:pop()')
-    -- self:decrement_indent ()
+    self:decrement_indent ()
     -- If closing a struct, do not call the function
     if isstruct then
         table.insert(self.chunck, '\n' .. self.indent .. 'end))')
     else
         table.insert(self.chunck, '\n' .. self.indent .. 'end)())')
     end
-    self:increment_indent ()
 end
 
 -- Handle all transpiler behaviors
