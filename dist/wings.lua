@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2502)
+Wings v1.0.0-dev (build 2503)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2502)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2503)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -695,10 +695,12 @@ function Wings.transpiler:handle_macro_call (command)
 
     -- Duplicate code with arg_separator check
     elseif is_begin_struct then
+        table.insert(self.stack, {name="begin-struct", macro=command})
+        
         self:write_macrocall_begin (command, #self.stack, true)
         self:write_macrocall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
 
-        table.insert(self.stack, {name="begin-struct", macro=command})
+        
     
     -- "command" may be a variable, or an implicit function call
     else
