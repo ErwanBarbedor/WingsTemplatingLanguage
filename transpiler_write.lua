@@ -35,7 +35,7 @@ end
 function Wings.transpiler:write_variable(s)
     -- Handle variable that may be added to the output by Wings
     if #s > 0 then
-        table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. ")")
+        table.insert(self.chunck, '\n'.. self.indent .. "wings:write (" .. s .. ")")
     end
 end
 

@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2391)
+Wings v1.0.0-dev (build 2397)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2391)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2397)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -405,7 +405,7 @@ end
 function Wings.transpiler:write_variable(s)
     -- Handle variable that may be added to the output by Wings
     if #s > 0 then
-        table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. ")")
+        table.insert(self.chunck, '\n'.. self.indent .. "wings:write (" .. s .. ")")
     end
 end
 
