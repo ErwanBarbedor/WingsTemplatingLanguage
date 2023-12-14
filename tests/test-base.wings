@@ -28,7 +28,7 @@ bar
 
 #---------------------------------
 
-#-- TEST : begin sugar 1
+#-- TEST : begin struct 1
 #macro foo(x) <#x> #end
 #begin foo()
     foo
@@ -38,7 +38,7 @@ bar
 <foo
 > #-- END
 
-#-- TEST : begin sugar 2
+#-- TEST : begin struct 2
 #macro foo(x, y) <#y:#x> #end
 #begin foo(bar)
     foo

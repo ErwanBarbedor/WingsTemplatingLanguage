@@ -81,10 +81,15 @@ function Wings.transpiler:write_functioncall_arg_begin (name, stack_len)
     table.insert(self.chunck, '\n' .. self.indent .. 'wings:push()')
 end
 
-function Wings.transpiler:write_functioncall_arg_end ()
+function Wings.transpiler:write_functioncall_arg_end (isstruct)
     -- Closing args function
     table.insert(self.chunck, '\n' .. self.indent .. 'return wings:pop()')
-    self:decrement_indent ()
-    table.insert(self.chunck, '\n' .. self.indent .. 'end)())')
+    -- self:decrement_indent ()
+    -- If closing a struct, do not call the function
+    if isstruct then
+        table.insert(self.chunck, '\n' .. self.indent .. 'end))')
+    else
+        table.insert(self.chunck, '\n' .. self.indent .. 'end)())')
+    end
     self:increment_indent ()
 end

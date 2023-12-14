@@ -31,15 +31,15 @@ function Wings.transpiler:handle_inside_call (command)
         end
 
     -- This is the end of call
-    -- In case of begin sugar, we'll now capture next code.
+    -- In case of begin struct, we'll now capture next code.
     elseif self.top.name == 'call' then
         
-        if self.top.is_begin_sugar then
+        if self.top.is_begin_struct then
             self:write_functioncall_arg_end ()
             self:write_functioncall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
             
             table.remove(self.stack)
-            table.insert(self.stack, {name="begin-sugar", macro=self.top.macro})
+            table.insert(self.stack, {name="begin-struct", macro=self.top.macro})
         else
             self:write_functioncall_arg_end ()
             self:write_functioncall_end (self.top.macro, #self.stack)
@@ -174,8 +174,8 @@ function Wings.transpiler:handle_end_keyword ()
         self:write_lua ('\n' .. self.indent .. 'return wings:pop ()')
     end
 
-    if self.top.name == "begin-sugar" then
-        self:write_functioncall_arg_end ()
+    if self.top.name == "begin-struct" then
+        self:write_functioncall_arg_end (true)
         self:write_functioncall_end (self.top.macro, #self.stack+1)
     else
         self:decrement_indent ()
@@ -189,37 +189,37 @@ function Wings.transpiler:handle_end_keyword ()
 end
 
 function Wings.transpiler:handle_macro_call (command)
-    local is_begin_sugar
+    local is_begin_struct
     if command == "begin" then
-        is_begin_sugar = true
+        is_begin_struct = true
         self.line = self.line:gsub('^%s*', '')
         command = self.line:match('^' .. self.patterns.identifier)
         self.line = self.line:sub(#command+1, -1)
     end
 
-    if not is_begin_sugar then
+    if not is_begin_struct then
         self.pure_lua_line = false
     end
 
-    if self.line:match('^%(%s*%)') and not is_begin_sugar then
+    if self.line:match('^%(%s*%)') and not is_begin_struct then
         self.line = self.line:gsub('^%(%s*%)', '')
         self:write_functioncall_end (command, #self.stack, true)
     
     elseif self.line:match('^%' .. self.patterns.open_call) then
         self.line = self.line:sub(2, -1)
         
-        table.insert(self.stack, {name="call", deep=1, is_begin_sugar=is_begin_sugar, macro=command})
+        table.insert(self.stack, {name="call", deep=1, is_begin_struct=is_begin_struct, macro=command})
         
         local name = self:capture_functioncall_named_arg ()
         self:write_functioncall_begin (#self.stack) -- pass stack len to create a unique id 
         self:write_functioncall_arg_begin (name, #self.stack)
 
     -- Duplicate code with arg_separator check
-    elseif is_begin_sugar then
+    elseif is_begin_struct then
         self:write_functioncall_begin (#self.stack)
         self:write_functioncall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
 
-        table.insert(self.stack, {name="begin-sugar", macro=command})
+        table.insert(self.stack, {name="begin-struct", macro=command})
     
     -- "command" may be a variable, or an implicit function call
     else

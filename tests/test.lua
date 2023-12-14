@@ -22,7 +22,7 @@ local function test(wings_path, test_path, simplelog, fullog)
 
     local log = simplelog or fullog
 
-    local list = "base scope call struct"
+    local list = "base scope call controls "
 
     if jit then
         list = list .. " error-jit"

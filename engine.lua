@@ -72,7 +72,7 @@ function Wings:make_args_list (f, given_args)
     end
 
     local args = {}
-    -- Handle begin sugar
+    -- Handle begin struct
     -- Warning : using transpiler config after the transpilation,
     -- so a config change may break the code.
     local body = named_args[self.transpiler.patterns.special_name_prefix .. 'body']
