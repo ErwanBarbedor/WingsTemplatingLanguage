@@ -47,7 +47,7 @@ end
 
 function Wings.transpiler:write_functiondef_info (name, info)
     -- store function args names and defauts values
-    table.insert(self.chunck, '\n'..self.indent..'wings.function_args_info[' .. name .. '] = ' .. info)
+    table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. '}')
 end
 
 function Wings.transpiler:write_functioncall_begin (stack_len)

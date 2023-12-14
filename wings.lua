@@ -88,7 +88,7 @@ function Wings:new ()
     wings.SAVE_LUACODE_DIR = false
     
     -- Store function information
-    wings.function_args_info = setmetatable({}, {__mode="k"})
+    wings.function_info = setmetatable({}, {__mode="k"})
     
     wings.type = "wings"
     wings.transpiler:compile_patterns ()

@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2343)
+Wings v1.0.0-dev (build 2346)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2343)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2346)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -417,7 +417,7 @@ end
 
 function Wings.transpiler:write_functiondef_info (name, info)
     -- store function args names and defauts values
-    table.insert(self.chunck, '\n'..self.indent..'wings.function_args_info[' .. name .. '] = ' .. info)
+    table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. '}')
 end
 
 function Wings.transpiler:write_functioncall_begin (stack_len)
@@ -735,11 +735,13 @@ function Wings:make_args_list (f, given_args)
 
     -- Check if we have informations about f.
     -- If not return the positional args
-    local info = self.function_args_info[f]
+    local info = self.function_info[f]
 
     if not info then
         return (unpack or table.unpack) (positional_args)
     end
+
+    info = info.args
 
     local args = {}
     -- Handle begin struct
@@ -986,7 +988,7 @@ function Wings:new ()
     wings.SAVE_LUACODE_DIR = false
     
     -- Store function information
-    wings.function_args_info = setmetatable({}, {__mode="k"})
+    wings.function_info = setmetatable({}, {__mode="k"})
     
     wings.type = "wings"
     wings.transpiler:compile_patterns ()

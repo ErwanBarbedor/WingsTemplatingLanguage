@@ -65,11 +65,13 @@ function Wings:make_args_list (f, given_args)
 
     -- Check if we have informations about f.
     -- If not return the positional args
-    local info = self.function_args_info[f]
+    local info = self.function_info[f]
 
     if not info then
         return (unpack or table.unpack) (positional_args)
     end
+
+    info = info.args
 
     local args = {}
     -- Handle begin struct
