@@ -26,6 +26,9 @@ function Wings:write (x)
         end
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
+    elseif type(x) == "function" then
+        local implicit_call = x
+        table.insert(self.stack[#self.stack], implicit_call(self:make_args_list(x, {})))
     end
 end
 

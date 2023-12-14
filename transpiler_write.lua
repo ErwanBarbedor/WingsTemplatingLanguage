@@ -32,16 +32,10 @@ function Wings.transpiler:write_lua (s, toindent)
     table.insert(self.chunck, s)
 end
 
-function Wings.transpiler:write_variable_or_function(s)
+function Wings.transpiler:write_variable(s)
     -- Handle variable that may be added to the output by Wings
-    -- Handle implicit function call. (not inside wings:write() to keep
-    -- the function name in case of error.)
     if #s > 0 then
-        table.insert(self.chunck, '\n'.. self.indent .. 'if type(' .. s .. ') == "function" then')
-        table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. "(wings:make_args_list (".. s ..", {})))")
-        table.insert(self.chunck, '\n'.. self.indent .. 'else')
         table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. ")")
-        table.insert(self.chunck, '\n'.. self.indent .. 'end')
     end
 end
 

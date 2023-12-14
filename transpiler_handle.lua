@@ -223,6 +223,6 @@ function Wings.transpiler:handle_macro_call (command)
     
     -- "command" may be a variable, or an implicit function call
     else
-        self:write_variable_or_function (command)
+        self:write_variable (command)
     end
 end

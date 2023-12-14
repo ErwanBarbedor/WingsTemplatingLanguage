@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2346)
+Wings v1.0.0-dev (build 2375)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2346)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2375)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -402,16 +402,10 @@ function Wings.transpiler:write_lua (s, toindent)
     table.insert(self.chunck, s)
 end
 
-function Wings.transpiler:write_variable_or_function(s)
+function Wings.transpiler:write_variable(s)
     -- Handle variable that may be added to the output by Wings
-    -- Handle implicit function call. (not inside wings:write() to keep
-    -- the function name in case of error.)
     if #s > 0 then
-        table.insert(self.chunck, '\n'.. self.indent .. 'if type(' .. s .. ') == "function" then')
-        table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. "(wings:make_args_list (".. s ..", {})))")
-        table.insert(self.chunck, '\n'.. self.indent .. 'else')
         table.insert(self.chunck, '\n'.. self.indent .. "\twings:write (" .. s .. ")")
-        table.insert(self.chunck, '\n'.. self.indent .. 'end')
     end
 end
 
@@ -676,7 +670,7 @@ function Wings.transpiler:handle_macro_call (command)
     
     -- "command" may be a variable, or an implicit function call
     else
-        self:write_variable_or_function (command)
+        self:write_variable (command)
     end
 end
 
@@ -696,6 +690,9 @@ function Wings:write (x)
         end
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
+    elseif type(x) == "function" then
+        local implicit_call = x
+        table.insert(self.stack[#self.stack], implicit_call(self:make_args_list(x, {})))
     end
 end
 
