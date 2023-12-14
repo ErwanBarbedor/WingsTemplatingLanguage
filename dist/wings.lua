@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2497)
+Wings v1.0.0-dev (build 2499)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2497)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2499)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -420,6 +420,7 @@ function Wings.transpiler:write_macrodef_info (name, info, isstruct)
 end
 
 function Wings.transpiler:write_macrocall_begin (name, stack_len, isstruct)
+    table.insert(self.chunck, '\n' .. self.indent .. 'if not '..name..' then error ("Try to call '..name..', a nil value.") end')
     if isstruct then
         -- Check if the macro is a struct
         table.insert(self.chunck, '\n' .. self.indent .. 'if (wings.macro_info['..name..'] or {}).kind ~= "struct" then')
