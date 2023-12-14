@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2499)
+Wings v1.0.0-dev (build 2502)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2499)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2502)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -1229,7 +1229,7 @@ if first_arg_name == 'wings.lua' or first_arg_name == 'wings' then
 		local sucess, result = pcall (wings.renderFile, wings, cli_args.input)
 
 		if not sucess then
-			print(result)
+			print(result:gsub('^.-file', 'file'))
 			os.exit ()
 		end
 

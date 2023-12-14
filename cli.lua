@@ -118,7 +118,7 @@ if first_arg_name == 'wings.lua' or first_arg_name == 'wings' then
 		local sucess, result = pcall (wings.renderFile, wings, cli_args.input)
 
 		if not sucess then
-			print(result)
+			print(result:gsub('^.-file', 'file'))
 			os.exit ()
 		end
 
