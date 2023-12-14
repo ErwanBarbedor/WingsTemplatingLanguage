@@ -92,7 +92,7 @@ end
 
 function Wings.transpiler:handle_wings_code (command)
     -- We are inside Wings code and no call to manage.
-    -- Manage each of allowed keyword and macro/function call
+    -- Manage each of allowed keyword and macro call
     
     -- Open raw lua code chunck
     if command == "lua" then
@@ -100,8 +100,8 @@ function Wings.transpiler:handle_wings_code (command)
         table.insert(self.stack, {lua=true, name="lua"})
         self:write_lua ('\n' .. self.indent .. '-- Begin raw lua code\n', true)
 
-    -- New function
-    elseif command == "function" or command == "macro" then
+    -- New macro
+    elseif command == "lmacro" or command == "macro" then
         self:handle_new_function (command == "macro")
         
     -- Open a lua chunck for iterator / condition
@@ -115,7 +115,7 @@ function Wings.transpiler:handle_wings_code (command)
         self:write_lua ('\n'.. self.indent..command)
         self:increment_indent()
 
-    -- Close function/macro declaration, lua chunck or for/if/while structure
+    -- Close macro declaration, lua chunck or for/if/while structure
     elseif command == "end" then
         self:handle_end_keyword ()
 
@@ -145,7 +145,7 @@ function Wings.transpiler:handle_wings_code (command)
 end
 
 function Wings.transpiler:handle_new_function (ismacro)
-    -- Declare a new function. If is not a macro, open a lua code chunck
+    -- Declare a new function. If is not a macro, it is a function, so open a lua code chunck
     local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
     self.line = self.line:sub((#space+#name)+1, -1)
     local args, spaces = self.line:match('^(%b())(%s*)')

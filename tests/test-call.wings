@@ -77,14 +77,14 @@ bar space bar
 
 #-- END
 
-#-- TEST : simple function
-#function foo return "bar" #end #foo()
+#-- TEST : simple lmacro
+#lmacro foo return "bar" #end #foo()
 #-- RESULT
  bar
 #-- END
 
-#-- TEST : function with args
-#function double(x)
+#-- TEST : lmacro with args
+#lmacro double(x)
     return x .. x
 #end
 #double(foo)
@@ -92,8 +92,8 @@ bar space bar
 foofoo
 #-- END
 
-#-- TEST : function with named args 1
-#function double(x=bar)
+#-- TEST : lmacro with named args 1
+#lmacro double(x=bar)
     return x .. " " .. x
 #end
 #double()
@@ -101,8 +101,8 @@ foofoo
 bar bar
 #-- END
 
-#-- TEST : function with named args 2
-#function double(x=bar)
+#-- TEST : lmacro with named args 2
+#lmacro double(x=bar)
     return x .. " " .. x
 #end
 #double(x=foo)
@@ -110,8 +110,8 @@ bar bar
 foo foo
 #-- END
 
-#-- TEST : function with named args 3
-#function cat(x, y=bar)
+#-- TEST : lmacro with named args 3
+#lmacro cat(x, y=bar)
     return x..y
 #end
 #cat(foo)
@@ -119,8 +119,8 @@ foo foo
 foobar
 #-- END
 
-#-- TEST : function with named args 4
-#function cat(x, y=bar)
+#-- TEST : lmacro with named args 4
+#lmacro cat(x, y=bar)
     return x..y
 #end
 #cat(foo, y=foo)
@@ -128,8 +128,8 @@ foobar
 foofoo
 #-- END
 
-#-- TEST : function with named args 5
-#function cat(x=bar space bar)
+#-- TEST : lmacro with named args 5
+#lmacro cat(x=bar space bar)
     return x
 #end
 #cat()
@@ -139,7 +139,7 @@ bar space bar
 
 #-- TEST : macro with named args 6
 #macro foo bar #end
-#function cat(x=#foo)
+#lmacro cat(x=#foo)
     return x
 #end
 #cat()
@@ -148,8 +148,8 @@ bar space bar
  bar 
 #-- END
 
-#-- TEST : function with named args 7
-#function cat(x, y)
+#-- TEST : lmacro with named args 7
+#lmacro cat(x, y)
     return x .. (y or "")
 #end
 #cat(x=5)
@@ -157,8 +157,8 @@ bar space bar
 5
 #-- END
 
-#-- TEST : function with named args 8
-#function cat(x, y)
+#-- TEST : lmacro with named args 8
+#lmacro cat(x, y)
     return (x or "") .. y
 #end
 #cat(y=5)
@@ -166,8 +166,8 @@ bar space bar
 5
 #-- END
 
-#-- TEST : function with named args 9
-#function cat(x, y)
+#-- TEST : lmacro with named args 9
+#lmacro cat(x, y)
     return (x or "") .. y
 #end
 #cat(y=5, 1)
