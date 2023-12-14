@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2405)
+Wings v1.0.0-dev (build 2412)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2405)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2412)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -328,7 +328,7 @@ function Wings.transpiler:decrement_indent ()
 end
 
 -- capture function modify the line
-function Wings.transpiler:capture_functioncall_named_arg ()
+function Wings.transpiler:capture_macrocall_named_arg ()
     -- In the begining of an argument, check if it is a named argument.
 
     local name = self.line:match('^%s*%w+=')
@@ -365,10 +365,10 @@ function Wings.transpiler:capture_syntax_feature (capture)
 
     elseif command == self.patterns.arg_separator and self.top.name == 'call' then
         -- Inside a call, push a new argument
-        self:write_functioncall_arg_end ()
+        self:write_macrocall_arg_end ()
         self:decrement_indent ()
-        local name = self:capture_functioncall_named_arg ()
-        self:write_functioncall_arg_begin (name, #self.stack)
+        local name = self:capture_macrocall_named_arg ()
+        self:write_macrocall_arg_begin (name, #self.stack)
     
     elseif self.top.lua then
         -- this is lua code
@@ -409,7 +409,7 @@ function Wings.transpiler:write_variable(s)
     end
 end
 
-function Wings.transpiler:write_functiondef_info (name, info, isstruct)
+function Wings.transpiler:write_macrodef_info (name, info, isstruct)
     -- store function args names and defauts values
     table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. ', ')
     if isstruct then
@@ -419,12 +419,12 @@ function Wings.transpiler:write_functiondef_info (name, info, isstruct)
     end
 end
 
-function Wings.transpiler:write_functioncall_begin (stack_len)
+function Wings.transpiler:write_macrocall_begin (stack_len)
     -- Create the table used to store function arguments
     table.insert(self.chunck, '\n' .. self.indent .. 'wings._args' .. stack_len .. ' = {}\n')
 end
 
-function Wings.transpiler:write_functioncall_end (s, stack_len, direct)
+function Wings.transpiler:write_macrocall_end (s, stack_len, direct)
     -- Call the function and write the result.
     -- Handle named argument and defaut values.
     -- direct : called without argument.
@@ -438,7 +438,7 @@ function Wings.transpiler:write_functioncall_end (s, stack_len, direct)
     end
 end
 
-function Wings.transpiler:write_functioncall_arg_begin (name, stack_len)
+function Wings.transpiler:write_macrocall_arg_begin (name, stack_len)
     -- write the begining of a argument : a function to encompass the argument body.
     -- name must be a valid lua key following by a '='
     if name then
@@ -450,7 +450,7 @@ function Wings.transpiler:write_functioncall_arg_begin (name, stack_len)
     table.insert(self.chunck, '\n' .. self.indent .. 'wings:push()')
 end
 
-function Wings.transpiler:write_functioncall_arg_end (isstruct)
+function Wings.transpiler:write_macrocall_arg_end (isstruct)
     -- Closing args function
     table.insert(self.chunck, '\n' .. self.indent .. 'return wings:pop()')
     self:decrement_indent ()
@@ -486,14 +486,14 @@ function Wings.transpiler:handle_inside_call (command)
     elseif self.top.name == 'call' then
         
         if self.top.is_begin_struct then
-            self:write_functioncall_arg_end ()
-            self:write_functioncall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
+            self:write_macrocall_arg_end ()
+            self:write_macrocall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
             
             table.remove(self.stack)
             table.insert(self.stack, {name="begin-struct", macro=self.top.macro})
         else
-            self:write_functioncall_arg_end ()
-            self:write_functioncall_end (self.top.macro, #self.stack)
+            self:write_macrocall_arg_end ()
+            self:write_macrocall_end (self.top.macro, #self.stack)
 
             table.remove(self.stack)
         end
@@ -522,7 +522,7 @@ function Wings.transpiler:handle_lua_code (command)
         self:write_lua ('\n' .. self.indent .. 'end')
 
         -- save function arguments info
-        self:write_functiondef_info (self.top.fname, self.top.args)
+        self:write_macrodef_info (self.top.fname, self.top.args)
 
     elseif command == "do" and (self.top.name == "for" or self.top.name == "while") then
         table.remove(self.stack)
@@ -626,8 +626,8 @@ function Wings.transpiler:handle_end_keyword ()
     end
 
     if self.top.name == "begin-struct" then
-        self:write_functioncall_arg_end (true)
-        self:write_functioncall_end (self.top.macro, #self.stack+1)
+        self:write_macrocall_arg_end (true)
+        self:write_macrocall_end (self.top.macro, #self.stack+1)
     else
         self:decrement_indent ()
         self:write_lua ('\n' .. self.indent .. 'end')
@@ -635,7 +635,7 @@ function Wings.transpiler:handle_end_keyword ()
 
     -- save macro arguments info
     if self.top.name == 'macro' then
-        self:write_functiondef_info (self.top.fname, self.top.args, self.top.isstruct)
+        self:write_macrodef_info (self.top.fname, self.top.args, self.top.isstruct)
     end
 end
 
@@ -654,21 +654,21 @@ function Wings.transpiler:handle_macro_call (command)
 
     if self.line:match('^%(%s*%)') and not is_begin_struct then
         self.line = self.line:gsub('^%(%s*%)', '')
-        self:write_functioncall_end (command, #self.stack, true)
+        self:write_macrocall_end (command, #self.stack, true)
     
     elseif self.line:match('^%' .. self.patterns.open_call) then
         self.line = self.line:sub(2, -1)
         
         table.insert(self.stack, {name="call", deep=1, is_begin_struct=is_begin_struct, macro=command})
         
-        local name = self:capture_functioncall_named_arg ()
-        self:write_functioncall_begin (#self.stack) -- pass stack len to create a unique id 
-        self:write_functioncall_arg_begin (name, #self.stack)
+        local name = self:capture_macrocall_named_arg ()
+        self:write_macrocall_begin (#self.stack) -- pass stack len to create a unique id 
+        self:write_macrocall_arg_begin (name, #self.stack)
 
     -- Duplicate code with arg_separator check
     elseif is_begin_struct then
-        self:write_functioncall_begin (#self.stack)
-        self:write_functioncall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
+        self:write_macrocall_begin (#self.stack)
+        self:write_macrocall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
 
         table.insert(self.stack, {name="begin-struct", macro=command})
     

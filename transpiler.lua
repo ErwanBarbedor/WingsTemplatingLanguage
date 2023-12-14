@@ -164,7 +164,7 @@ function Wings.transpiler:decrement_indent ()
 end
 
 -- capture function modify the line
-function Wings.transpiler:capture_functioncall_named_arg ()
+function Wings.transpiler:capture_macrocall_named_arg ()
     -- In the begining of an argument, check if it is a named argument.
 
     local name = self.line:match('^%s*%w+=')
@@ -201,10 +201,10 @@ function Wings.transpiler:capture_syntax_feature (capture)
 
     elseif command == self.patterns.arg_separator and self.top.name == 'call' then
         -- Inside a call, push a new argument
-        self:write_functioncall_arg_end ()
+        self:write_macrocall_arg_end ()
         self:decrement_indent ()
-        local name = self:capture_functioncall_named_arg ()
-        self:write_functioncall_arg_begin (name, #self.stack)
+        local name = self:capture_macrocall_named_arg ()
+        self:write_macrocall_arg_begin (name, #self.stack)
     
     elseif self.top.lua then
         -- this is lua code

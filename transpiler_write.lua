@@ -39,7 +39,7 @@ function Wings.transpiler:write_variable(s)
     end
 end
 
-function Wings.transpiler:write_functiondef_info (name, info, isstruct)
+function Wings.transpiler:write_macrodef_info (name, info, isstruct)
     -- store function args names and defauts values
     table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. ', ')
     if isstruct then
@@ -49,12 +49,12 @@ function Wings.transpiler:write_functiondef_info (name, info, isstruct)
     end
 end
 
-function Wings.transpiler:write_functioncall_begin (stack_len)
+function Wings.transpiler:write_macrocall_begin (stack_len)
     -- Create the table used to store function arguments
     table.insert(self.chunck, '\n' .. self.indent .. 'wings._args' .. stack_len .. ' = {}\n')
 end
 
-function Wings.transpiler:write_functioncall_end (s, stack_len, direct)
+function Wings.transpiler:write_macrocall_end (s, stack_len, direct)
     -- Call the function and write the result.
     -- Handle named argument and defaut values.
     -- direct : called without argument.
@@ -68,7 +68,7 @@ function Wings.transpiler:write_functioncall_end (s, stack_len, direct)
     end
 end
 
-function Wings.transpiler:write_functioncall_arg_begin (name, stack_len)
+function Wings.transpiler:write_macrocall_arg_begin (name, stack_len)
     -- write the begining of a argument : a function to encompass the argument body.
     -- name must be a valid lua key following by a '='
     if name then
@@ -80,7 +80,7 @@ function Wings.transpiler:write_functioncall_arg_begin (name, stack_len)
     table.insert(self.chunck, '\n' .. self.indent .. 'wings:push()')
 end
 
-function Wings.transpiler:write_functioncall_arg_end (isstruct)
+function Wings.transpiler:write_macrocall_arg_end (isstruct)
     -- Closing args function
     table.insert(self.chunck, '\n' .. self.indent .. 'return wings:pop()')
     self:decrement_indent ()
