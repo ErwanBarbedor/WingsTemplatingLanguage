@@ -28,29 +28,7 @@ bar
 
 #---------------------------------
 
-#-- TEST : begin struct 1
-#macro foo(x) <#x> #end
-#begin foo()
-    foo
-#end
-#-- RESULT
 
-<foo
-> #-- END
-
-#-- TEST : begin struct 2
-#macro foo(x, y) <#y:#x> #end
-#begin foo(bar)
-    foo
-#end
-#-- RESULT
-
-<bar:
-foo
-> #-- END
-
-
-#---------------------------------
 
 #-- TEST : import 1
 #import(toimport)

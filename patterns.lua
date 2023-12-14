@@ -21,10 +21,10 @@ Wings.transpiler.patterns = {
     indent                 = "    ",
 
     -- Macro, function and argument name format
-    identifier             = "[%a_][%a_0-9]*",
+    identifier             = "[%a_][%a_0-9%.]*",
 
     -- Edit this value may break lua code.
-    lua_identifier         = "[%a_][%a_0-9]*",
+    lua_identifier         = "[%a_][%a_0-9%.]*",
 
     -- All theses token must be one string long,
     -- the transpiler assumes that is the case.

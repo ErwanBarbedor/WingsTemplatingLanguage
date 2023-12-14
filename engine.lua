@@ -48,6 +48,30 @@ function Wings:pop ()
     return table.remove(self.stack)
 end
 
+-- Manage context write/read
+Wings.context_mt = {}
+
+function Wings.context_mt.__index (context, key)
+    for i=#context, 1, -1 do
+        local result = rawget(context, i)[key]
+        if result then
+            return result
+        end
+    end
+end
+
+function Wings.context_mt.__newindex (context, key, value)
+    context[#context][key] = value
+end
+
+function Wings:push_context ()
+    rawset(self.context, #self.context+1, {})
+end
+
+function Wings:pop_context ()
+    rawset(self.context, #self.context, nil)
+end
+
 function Wings:make_args_list (f, given_args)
     -- From a call with mixed positional and named arguments,
     -- make a lua-valid argument list.

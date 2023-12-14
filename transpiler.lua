@@ -99,7 +99,7 @@ function Wings.transpiler:transpile (code)
         table.insert(self.chuncks, self.line)
     end
 
-    return "wings:push ()\n\n" .. table.concat (self.chuncks, '') .. "\n\nreturn wings:pop ()"
+    return "local context = wings.context\nwings:push ()\n\n" .. table.concat (self.chuncks, '') .. "\n\nreturn wings:pop ()"
 end
 
 -- All these auxiliary functions may not be calling outside Wings.transpiler.transpile

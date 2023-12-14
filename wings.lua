@@ -80,6 +80,8 @@ function Wings:new ()
     
     -- Stack used for managing nested constructs
     wings.stack = {}
+    -- Manage "context", a custom kind of local variable
+    wings.context = setmetatable({{}}, wings.context_mt)
     -- Track differents files rendered in the same instance
     wings.filestack = {}
     -- Activate/desactivate error handling by wings.

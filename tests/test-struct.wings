@@ -1,0 +1,53 @@
+#-- TEST : struct 1
+#struct foo(x) <#x> #end
+#begin foo()
+    foo
+#end
+#-- RESULT
+
+<foo
+> #-- END
+
+#-- TEST : struct 2
+#struct foo(x, y) <#y:#x> #end
+#begin foo(bar)
+    foo
+#end
+#-- RESULT
+
+<bar:
+foo
+> #-- END
+
+#-- TEST : struct delay
+#struct foo(body)
+    #(x = 1)
+    #body
+#end
+#(x = 0)
+#begin foo(bar)
+    #x
+#end
+#-- RESULT
+
+1
+
+#-- END
+
+#-- TEST : context
+#(context.a = 5) 
+#struct foo(body)
+    #(context.a = 10) 
+    #context.a
+#end
+
+#context.a
+#begin foo(bar)
+    #context.a
+#end
+#context.a
+#-- RESULT
+5
+10
+5
+#-- END

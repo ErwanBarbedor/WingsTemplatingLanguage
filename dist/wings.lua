@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2436)
+Wings v1.0.0-dev (build 2497)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2436)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2497)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -138,10 +138,10 @@ Wings.transpiler.patterns = {
     indent                 = "    ",
 
     -- Macro, function and argument name format
-    identifier             = "[%a_][%a_0-9]*",
+    identifier             = "[%a_][%a_0-9%.]*",
 
     -- Edit this value may break lua code.
-    lua_identifier         = "[%a_][%a_0-9]*",
+    lua_identifier         = "[%a_][%a_0-9%.]*",
 
     -- All theses token must be one string long,
     -- the transpiler assumes that is the case.
@@ -263,7 +263,7 @@ function Wings.transpiler:transpile (code)
         table.insert(self.chuncks, self.line)
     end
 
-    return "wings:push ()\n\n" .. table.concat (self.chuncks, '') .. "\n\nreturn wings:pop ()"
+    return "local context = wings.context\nwings:push ()\n\n" .. table.concat (self.chuncks, '') .. "\n\nreturn wings:pop ()"
 end
 
 -- All these auxiliary functions may not be calling outside Wings.transpiler.transpile
@@ -523,17 +523,25 @@ end
 function Wings.transpiler:handle_lua_code (command)
     -- We are inside lua code. The only keyword allowed are "do, then, end" and
     -- are closing.
-    if command == "end" and self.top.name == "lua" then
+    if command == "end" then
+        if self.top.name == "lua" then
         table.remove(self.stack)
         self:write_lua ('\n' .. self.indent .. '-- End raw lua code\n', true)
 
-    elseif command == "end" and self.top.name == "function" then
-        table.remove(self.stack)
-        self:decrement_indent ()
-        self:write_lua ('\n' .. self.indent .. 'end')
+        elseif self.top.name == "lmacro" then
+            table.remove(self.stack)
+            
 
-        -- save function arguments info
-        self:write_macrodef_info (self.top.fname, self.top.args)
+            if self.top.isstruct then
+                self:write_lua ('\n' .. self.indent .. 'wings:pop_context ()')
+            end
+            self:decrement_indent ()
+            self:write_lua ('\n' .. self.indent .. 'end')
+
+            -- save function arguments info
+            self:write_macrodef_info (self.top.fname, self.top.args, self.top.isstruct)
+
+       end
 
     elseif command == "do" and (self.top.name == "for" or self.top.name == "while") then
         table.remove(self.stack)
@@ -564,7 +572,7 @@ function Wings.transpiler:handle_wings_code (command)
 
     -- New macro
     elseif command == "lmacro" or command == "macro" or command == "struct" or command == "lstruct" then
-        self:handle_new_function (command:sub(1, 1) ~= "l", command:match('struct$'))
+        self:handle_new_macro (command:sub(1, 1) ~= "l", command:match('struct$'))
         
     -- Open a lua chunck for iterator / condition
     elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
@@ -583,7 +591,7 @@ function Wings.transpiler:handle_wings_code (command)
 
    -- Enter lua-inline
     elseif command == self.patterns.open_call then 
-        local declaration = self.line:match('^%s*local%s+%w+%s*=%s*') or self.line:match('^%s*%w+%s*=%s*')
+        local declaration = self.line:match('^%s*local%s+[%w%.]+%s*=%s*') or self.line:match('^%s*[%w%.]+%s*=%s*')
         
         if declaration then
             self.line = self.line:sub(#declaration+1, -1)
@@ -606,8 +614,8 @@ function Wings.transpiler:handle_wings_code (command)
     end
 end
 
-function Wings.transpiler:handle_new_function (ismacro, isstruct)
-    -- Declare a new function. If is not a macro, it is a function, so open a lua code chunck
+function Wings.transpiler:handle_new_macro (ismacro, isstruct)
+    -- Declare a new macro. If is not a simple macro, it is a lmacro, so open a lua code chunck
     local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
     self.line = self.line:sub((#space+#name)+1, -1)
     local args, spaces = self.line:match('^(%b())(%s*)')
@@ -622,16 +630,24 @@ function Wings.transpiler:handle_new_function (ismacro, isstruct)
     self:write_lua ('\n' .. self.indent.. 'function ' .. name .. args_name )
     self:increment_indent ()
 
+    if isstruct then
+        self:write_lua ('\n' .. self.indent .. 'wings:push_context()')
+    end
+
     if ismacro then
         self:write_lua ('\n' .. self.indent .. 'wings:push()')
         table.insert(self.stack, {name="macro", args=args_info, fname=name, line=self.noline, isstruct=isstruct})
     else
-        table.insert(self.stack, {name="function", lua=true, args=args_info, fname=name, line=self.noline, isstruct=isstruct})
-    end     
+        table.insert(self.stack, {name="lmacro", lua=true, args=args_info, fname=name, line=self.noline, isstruct=isstruct})
+    end
 end
 
 function Wings.transpiler:handle_end_keyword ()
     table.remove(self.stack)
+    if self.top.isstruct then
+        self:write_lua ('\n' .. self.indent .. 'wings:pop_context ()')
+    end
+
     if self.top.name == 'macro' then
         self:write_lua ('\n' .. self.indent .. 'return wings:pop ()')
     end
@@ -645,7 +661,7 @@ function Wings.transpiler:handle_end_keyword ()
     end
 
     -- save macro arguments info
-    if self.top.name == 'macro' then
+    if self.top.name == 'macro' or self.top.name == "lmacro" then
         self:write_macrodef_info (self.top.fname, self.top.args, self.top.isstruct)
     end
 end
@@ -673,7 +689,7 @@ function Wings.transpiler:handle_macro_call (command)
         table.insert(self.stack, {name="call", deep=1, is_begin_struct=is_begin_struct, macro=command})
         
         local name = self:capture_macrocall_named_arg ()
-        self:write_macrocall_begin (command, #self.stack, false) -- pass stack len to create a unique id 
+        self:write_macrocall_begin (command, #self.stack, is_begin_struct) -- pass stack len to create a unique id 
         self:write_macrocall_arg_begin (name, #self.stack)
 
     -- Duplicate code with arg_separator check
@@ -725,6 +741,30 @@ function Wings:pop ()
     -- It will either be written to the parent, or returned as the final value.
     -- (possibly after being passed to a function).
     return table.remove(self.stack)
+end
+
+-- Manage context write/read
+Wings.context_mt = {}
+
+function Wings.context_mt.__index (context, key)
+    for i=#context, 1, -1 do
+        local result = rawget(context, i)[key]
+        if result then
+            return result
+        end
+    end
+end
+
+function Wings.context_mt.__newindex (context, key, value)
+    context[#context][key] = value
+end
+
+function Wings:push_context ()
+    rawset(self.context, #self.context+1, {})
+end
+
+function Wings:pop_context ()
+    rawset(self.context, #self.context, nil)
 end
 
 function Wings:make_args_list (f, given_args)
@@ -995,6 +1035,8 @@ function Wings:new ()
     
     -- Stack used for managing nested constructs
     wings.stack = {}
+    -- Manage "context", a custom kind of local variable
+    wings.context = setmetatable({{}}, wings.context_mt)
     -- Track differents files rendered in the same instance
     wings.filestack = {}
     -- Activate/desactivate error handling by wings.

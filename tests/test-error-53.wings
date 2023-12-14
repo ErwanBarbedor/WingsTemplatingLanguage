@@ -1,8 +1,8 @@
 #-- TEST : unknow macro
 #foo()
 #-- ERROR
-file "tests/", line 1 (lua 5) : attempt to call a nil value (global 'foo')
-    file "tests/", line 1 (lua 5) : in main chunk
+file "tests/", line 1 (lua 6) : attempt to call a nil value (global 'foo')
+    file "tests/", line 1 (lua 6) : in main chunk
 #-- END
 
 #-- TEST : nested unknow macro 1
@@ -11,9 +11,9 @@ file "tests/", line 1 (lua 5) : attempt to call a nil value (global 'foo')
 #end
 #foo()
 #-- ERROR
-file "tests/", line 2 (lua 9) : attempt to call a nil value (global 'bar')
-    file "tests/", line 2 (lua 9) : in global 'foo'
-    file "tests/", line 4 (lua 18) : in main chunk
+file "tests/", line 2 (lua 10) : attempt to call a nil value (global 'bar')
+    file "tests/", line 2 (lua 10) : in global 'foo'
+    file "tests/", line 4 (lua 19) : in main chunk
 #-- END
 
 #-- TEST 54: nested unknow macro 2
