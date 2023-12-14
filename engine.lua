@@ -27,6 +27,9 @@ function Wings:write (x)
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
     elseif type(x) == "function" then
+        if (self.macro_info[x] or {} ).kind == "struct" then
+            error("Try to call (implicitly) a struct value.", 0)
+        end
         local implicit_call = x
         table.insert(self.stack[#self.stack], implicit_call(self:make_args_list(x, {})))
     end
@@ -68,7 +71,7 @@ function Wings:make_args_list (f, given_args)
 
     -- Check if we have informations about f.
     -- If not return the positional args
-    local info = self.function_info[f]
+    local info = self.macro_info[f]
 
     if not info then
         return (unpack or table.unpack) (positional_args)

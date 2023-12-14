@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2412)
+Wings v1.0.0-dev (build 2436)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2412)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2436)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -411,7 +411,7 @@ end
 
 function Wings.transpiler:write_macrodef_info (name, info, isstruct)
     -- store function args names and defauts values
-    table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. ', ')
+    table.insert(self.chunck, '\n'..self.indent..'wings.macro_info[' .. name .. '] = {args=' .. info .. ', ')
     if isstruct then
         table.insert(self.chunck, ('kind = "struct"}'))
     else
@@ -419,7 +419,18 @@ function Wings.transpiler:write_macrodef_info (name, info, isstruct)
     end
 end
 
-function Wings.transpiler:write_macrocall_begin (stack_len)
+function Wings.transpiler:write_macrocall_begin (name, stack_len, isstruct)
+    if isstruct then
+        -- Check if the macro is a struct
+        table.insert(self.chunck, '\n' .. self.indent .. 'if (wings.macro_info['..name..'] or {}).kind ~= "struct" then')
+        table.insert(self.chunck, '\n' .. self.indent .. '    error("Try use '..name..', a macro, as a struct.")')
+        table.insert(self.chunck, '\n' .. self.indent .. 'end')
+    else
+        -- Check if the macro isn't a struct
+        table.insert(self.chunck, '\n' .. self.indent .. 'if (wings.macro_info['..name..'] or {}).kind == "struct" then')
+        table.insert(self.chunck, '\n' .. self.indent .. '    error("Try to call '..name..', a struct value.")')
+        table.insert(self.chunck, '\n' .. self.indent .. 'end')
+    end
     -- Create the table used to store function arguments
     table.insert(self.chunck, '\n' .. self.indent .. 'wings._args' .. stack_len .. ' = {}\n')
 end
@@ -662,12 +673,12 @@ function Wings.transpiler:handle_macro_call (command)
         table.insert(self.stack, {name="call", deep=1, is_begin_struct=is_begin_struct, macro=command})
         
         local name = self:capture_macrocall_named_arg ()
-        self:write_macrocall_begin (#self.stack) -- pass stack len to create a unique id 
+        self:write_macrocall_begin (command, #self.stack, false) -- pass stack len to create a unique id 
         self:write_macrocall_arg_begin (name, #self.stack)
 
     -- Duplicate code with arg_separator check
     elseif is_begin_struct then
-        self:write_macrocall_begin (#self.stack)
+        self:write_macrocall_begin (command, #self.stack, true)
         self:write_macrocall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
 
         table.insert(self.stack, {name="begin-struct", macro=command})
@@ -695,6 +706,9 @@ function Wings:write (x)
     elseif type(x) == "string" or type(x) == "number" then
         table.insert(self.stack[#self.stack], self:Token(x))
     elseif type(x) == "function" then
+        if (self.macro_info[x] or {} ).kind == "struct" then
+            error("Try to call (implicitly) a struct value.", 0)
+        end
         local implicit_call = x
         table.insert(self.stack[#self.stack], implicit_call(self:make_args_list(x, {})))
     end
@@ -736,7 +750,7 @@ function Wings:make_args_list (f, given_args)
 
     -- Check if we have informations about f.
     -- If not return the positional args
-    local info = self.function_info[f]
+    local info = self.macro_info[f]
 
     if not info then
         return (unpack or table.unpack) (positional_args)
@@ -988,8 +1002,8 @@ function Wings:new ()
     -- Path to save transpiled code
     wings.SAVE_LUACODE_DIR = false
     
-    -- Store function information
-    wings.function_info = setmetatable({}, {__mode="k"})
+    -- Store macro information
+    wings.macro_info = setmetatable({}, {__mode="k"})
     
     wings.type = "wings"
     wings.transpiler:compile_patterns ()

@@ -211,12 +211,12 @@ function Wings.transpiler:handle_macro_call (command)
         table.insert(self.stack, {name="call", deep=1, is_begin_struct=is_begin_struct, macro=command})
         
         local name = self:capture_macrocall_named_arg ()
-        self:write_macrocall_begin (#self.stack) -- pass stack len to create a unique id 
+        self:write_macrocall_begin (command, #self.stack, false) -- pass stack len to create a unique id 
         self:write_macrocall_arg_begin (name, #self.stack)
 
     -- Duplicate code with arg_separator check
     elseif is_begin_struct then
-        self:write_macrocall_begin (#self.stack)
+        self:write_macrocall_begin (command, #self.stack, true)
         self:write_macrocall_arg_begin (self.patterns.special_name_prefix.."body", #self.stack)
 
         table.insert(self.stack, {name="begin-struct", macro=command})

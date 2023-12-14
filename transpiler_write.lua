@@ -41,7 +41,7 @@ end
 
 function Wings.transpiler:write_macrodef_info (name, info, isstruct)
     -- store function args names and defauts values
-    table.insert(self.chunck, '\n'..self.indent..'wings.function_info[' .. name .. '] = {args=' .. info .. ', ')
+    table.insert(self.chunck, '\n'..self.indent..'wings.macro_info[' .. name .. '] = {args=' .. info .. ', ')
     if isstruct then
         table.insert(self.chunck, ('kind = "struct"}'))
     else
@@ -49,7 +49,18 @@ function Wings.transpiler:write_macrodef_info (name, info, isstruct)
     end
 end
 
-function Wings.transpiler:write_macrocall_begin (stack_len)
+function Wings.transpiler:write_macrocall_begin (name, stack_len, isstruct)
+    if isstruct then
+        -- Check if the macro is a struct
+        table.insert(self.chunck, '\n' .. self.indent .. 'if (wings.macro_info['..name..'] or {}).kind ~= "struct" then')
+        table.insert(self.chunck, '\n' .. self.indent .. '    error("Try use '..name..', a macro, as a struct.")')
+        table.insert(self.chunck, '\n' .. self.indent .. 'end')
+    else
+        -- Check if the macro isn't a struct
+        table.insert(self.chunck, '\n' .. self.indent .. 'if (wings.macro_info['..name..'] or {}).kind == "struct" then')
+        table.insert(self.chunck, '\n' .. self.indent .. '    error("Try to call '..name..', a struct value.")')
+        table.insert(self.chunck, '\n' .. self.indent .. 'end')
+    end
     -- Create the table used to store function arguments
     table.insert(self.chunck, '\n' .. self.indent .. 'wings._args' .. stack_len .. ' = {}\n')
 end

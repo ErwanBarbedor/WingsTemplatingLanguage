@@ -87,8 +87,8 @@ function Wings:new ()
     -- Path to save transpiled code
     wings.SAVE_LUACODE_DIR = false
     
-    -- Store function information
-    wings.function_info = setmetatable({}, {__mode="k"})
+    -- Store macro information
+    wings.macro_info = setmetatable({}, {__mode="k"})
     
     wings.type = "wings"
     wings.transpiler:compile_patterns ()
