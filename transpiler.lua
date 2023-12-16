@@ -107,7 +107,8 @@ end
 -- Utils
 function Wings.transpiler:escape_string (s)
     -- Make a valid lua string
-    return "'" .. s:gsub("'", "\\'")
+    return "'" .. s:gsub("\\", "\\\\")
+                    :gsub("'", "\\'")
                    :gsub("\n", "\\n") .. "'"
 end
 

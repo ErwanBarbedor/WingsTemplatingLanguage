@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2503)
+Wings v1.0.0-dev (build 2504)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2503)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2504)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -271,7 +271,8 @@ end
 -- Utils
 function Wings.transpiler:escape_string (s)
     -- Make a valid lua string
-    return "'" .. s:gsub("'", "\\'")
+    return "'" .. s:gsub("\\", "\\\\")
+                    :gsub("'", "\\'")
                    :gsub("\n", "\\n") .. "'"
 end
 
