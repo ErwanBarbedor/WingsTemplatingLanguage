@@ -27,14 +27,19 @@ function Wings.std.import(wings, name)
     name = name:tostring()
 
     for _, path in ipairs(wings.package.path) do
-        local path = path:gsub('?', name)
-        file = io.open(path)
-        if file then
-            file_path = path
-            file:close ()
+        for _, ext in ipairs(wings.config.extensions) do
+            local path = path:gsub('?', name):gsub('%.ext$', '.' .. ext)
+            file = io.open(path)
+            if file then
+                file_path = path
+                file:close ()
+                break
+            else
+                table.insert(failed_path, path)
+            end
+        end
+        if file_path then
             break
-        else
-            table.insert(failed_path, path)
         end
     end
 

@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2504)
+Wings v1.0.0-dev (build 2509)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2504)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2509)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -981,14 +981,19 @@ function Wings.std.import(wings, name)
     name = name:tostring()
 
     for _, path in ipairs(wings.package.path) do
-        local path = path:gsub('?', name)
-        file = io.open(path)
-        if file then
-            file_path = path
-            file:close ()
+        for _, ext in ipairs(wings.config.extensions) do
+            local path = path:gsub('?', name):gsub('%.ext$', '.' .. ext)
+            file = io.open(path)
+            if file then
+                file_path = path
+                file:close ()
+                break
+            else
+                table.insert(failed_path, path)
+            end
+        end
+        if file_path then
             break
-        else
-            table.insert(failed_path, path)
         end
     end
 
@@ -1031,10 +1036,8 @@ function Wings:new ()
     wings.package = {}
     wings.package.path= {}
     for path in package.path:gmatch('[^;]+') do
-        for _, ext in ipairs(wings.config.extensions) do
-            local path = path:gsub('%.lua$', '.' .. ext)
-            table.insert(wings.package.path, path)
-        end
+        path = path:gsub('%.lua$', '.ext')
+        table.insert(wings.package.path, path)
     end
     
     -- Stack used for managing nested constructs

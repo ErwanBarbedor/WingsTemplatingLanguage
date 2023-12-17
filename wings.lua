@@ -72,10 +72,8 @@ function Wings:new ()
     wings.package = {}
     wings.package.path= {}
     for path in package.path:gmatch('[^;]+') do
-        for _, ext in ipairs(wings.config.extensions) do
-            local path = path:gsub('%.lua$', '.' .. ext)
-            table.insert(wings.package.path, path)
-        end
+        path = path:gsub('%.lua$', '.ext')
+        table.insert(wings.package.path, path)
     end
     
     -- Stack used for managing nested constructs
