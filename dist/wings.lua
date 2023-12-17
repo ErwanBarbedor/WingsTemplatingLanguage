@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2511)
+Wings v1.0.0-dev (build 2513)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2511)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2513)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -880,12 +880,18 @@ function Wings:TokenList ()
     local tl = {}
     tl.type = "WingsTokenList"
 
-    function tl:tostring ()
+    function tl:tostring (trim)
         local result = {}
         for _, token in ipairs(self) do
             table.insert(result, token.content or "")
         end
-        return table.concat(result, "")
+        result = table.concat(result, "")
+
+        if trim then
+            result = result:gsub("^%s+", ""):gsub("%s+$", "")
+        end
+
+        return result
     end
 
     function tl:tonumber ()

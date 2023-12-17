@@ -15,12 +15,18 @@ function Wings:TokenList ()
     local tl = {}
     tl.type = "WingsTokenList"
 
-    function tl:tostring ()
+    function tl:tostring (trim)
         local result = {}
         for _, token in ipairs(self) do
             table.insert(result, token.content or "")
         end
-        return table.concat(result, "")
+        result = table.concat(result, "")
+
+        if trim then
+            result = result:gsub("^%s+", ""):gsub("%s+$", "")
+        end
+
+        return result
     end
 
     function tl:tonumber ()
