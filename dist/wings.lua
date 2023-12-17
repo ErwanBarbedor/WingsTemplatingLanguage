@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2509)
+Wings v1.0.0-dev (build 2511)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2509)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2511)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -558,7 +558,7 @@ function Wings.transpiler:handle_lua_code (command)
         self:increment_indent ()
 
     else
-        self:write_lua (command)
+        self:write_lua (self.patterns.escape .. command)
     end
 end
 

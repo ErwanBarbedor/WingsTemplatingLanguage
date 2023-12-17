@@ -94,7 +94,7 @@ function Wings.transpiler:handle_lua_code (command)
         self:increment_indent ()
 
     else
-        self:write_lua (command)
+        self:write_lua (self.patterns.escape .. command)
     end
 end
 
