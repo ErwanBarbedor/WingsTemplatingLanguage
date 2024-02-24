@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2513)
+Wings v1.0.0-dev (build 2514)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2513)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2514)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
