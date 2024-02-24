@@ -21,7 +21,10 @@ Wings.transpiler.patterns = {
     indent                 = "    ",
 
     -- Macro, function and argument name format
-    identifier = "[%a_][%a_0-9%.]*",
+    identifier = {
+        "[%a_][%a_0-9%.:]*[%a_0-9]",
+        "[%a_]"
+    },
 
     -- Edit this value may break lua code.
     lua_identifier         = "[%a_][%a_0-9%.]*",
@@ -60,10 +63,19 @@ end
 
 function Wings.transpiler.matchPattern (text, pattern, fromstart)
     -- text      : string to search pattern
-    -- pattern   : string or function
+    -- pattern   : string or list of string
     -- fromstart : pattern must be at the start of the text?
-    if fromstart then
-        pattern = "^" .. pattern
+    if type(pattern) == "string" then
+        pattern = {pattern}
     end
-    return text:match(pattern)
+
+    for _, choice in ipairs(pattern) do
+        if fromstart then
+            choice = "^" .. choice
+        end
+        -- 2 call, but send all returned values
+        if text:match(choice) then
+            return text:match(choice)
+        end
+    end
 end
