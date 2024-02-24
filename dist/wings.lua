@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2614)
+Wings v1.0.0-dev (build 2616)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2614)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2616)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -795,7 +795,7 @@ function Wings:write (x)
             error("Try to call (implicitly) a struct value.", 0)
         end
         local implicit_call = x
-        table.insert(self.stack[#self.stack], implicit_call(self:make_args_list(x, {})))
+        self:write(implicit_call(self:make_args_list(x, {})))
     end
 end
 

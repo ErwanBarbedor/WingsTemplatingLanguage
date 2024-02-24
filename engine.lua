@@ -31,7 +31,7 @@ function Wings:write (x)
             error("Try to call (implicitly) a struct value.", 0)
         end
         local implicit_call = x
-        table.insert(self.stack[#self.stack], implicit_call(self:make_args_list(x, {})))
+        self:write(implicit_call(self:make_args_list(x, {})))
     end
 end
 
