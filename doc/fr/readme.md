@@ -1,78 +1,47 @@
 # Wings Templating Language
 
-[🇫🇷 version](#Français)
-## Table des matières
-- [Introduction](#introduction)
-
 ## Introduction
-Wings est un langage de templating centrée autour de la flexibilité et l'extensibilité, créé pour répondre à des besoins spécifiques de rédaction automatisée et de génération de contenu dynamique, tout en restant intuitif pour les auteurs de documents. 
 
-## Cas d'Usage du Langage
+Wings est un langage de template "logicfull" intégrant lua dans sa syntaxe.
 
-Bien que développé initialement pour la création de supports pédagogiques en HTML/CSS, Wings présente un potentiel d'utilisation dans divers contextes :
+Je l'utilise principalement dans le projet Plume (lien à venir), qui permet d'écrire des documents en utilisant la puissance du html+css.
 
-- Génération dynamique de rapports ou de documents comportant des éléments récurrents.
-- La personnalisation de sites web statiques ayant besoin de mises à jour fréquentes.
-- L'automatisation de newsletters ou de courriels personnalisés à partir de modèles établis.
-- La création de code source ou de fichiers de configurations sur la base de templates personnalisables.
+Wings est actuellement en cours de développement et absolument pas prêt à être utiliser en production.
+Un tutoriel et une documentation extensive sont en cours de rédaction.
 
+## Note de conception
+Un langage "de template" vise à permettre à l'utilisateur d'écrire son texte de la manière la plus fluide possible.
+Pour structurer son document et gagner du temps, il contient parfois quelques éléments logiques (macro, boucles ou autres éléments de programations...), mais écrire un programme complet est souvent fastidieux : un langage de template n'est pas fait pour ça.
 
-## Points forts
-- Une syntaxe cohérente et claire.
-- La gestion de variables et les opérations arithmétiques.
-- Des structures de contrôle comme les boucles for/while et les conditions if.
-- La définition et l'utilisation de macros.
-- L'intégration de code Lua directement dans les templates.
-- La possibilité d'enrichir Wings avec des bibliothèques Lua supplémentaires.
+A l'opposé, un langage de programmation "classique" est conçu pour contrôler le flux d'instructions de la manière la plus efficace possible (du point vue d'une certaine philosophie de programmation).
+Il permet de représenter des données brutes, du texte pour ce qui nous intéresse ici, mais il serais souvent laborieux d'écrire un document texte en python ou autre.
 
+L'objectif de Wings est d'atteindre le juste milieu des deux mondes : mettre le texte au centre de la syntaxe, mais permettre sans coût (ou presque) l'utilisation de la pleine puissance d'un langage de programmation.
 
-## Installation
-Wings est écrit en Lua et compatible avec les versions de 5.1 à 5.4, ainsi que luajit.
+Plutôt de créer un dialecte entier à partir de 0, Wings transpile en lua dont il reprend donc toutes les fonctionnalités.
 
-## Utiliser Wings
-### En ligne de commande
-### Dans un programme Lua
+## Principe concret
+Lorsque Wings parcourt le document afin de le transpiler, il sépare le code en trois catégories :
+  - Les éléments de contrôle (commencant par un '#')
+  - Le texte, qui sera affiché tel quel dans la sortie finale.
+  - Le code Lua, qui sera gardé tel quel dans le fichier transpilé.
 
-## Apprendre Wings
+Par exemple, dans le code suivant:
+``` wings
+#for i=1, 3 #do
+  Ceci est une ligne!
+#end
+```
 
-Si vous ne connaissez pas le langage Lua ou souhaitez juste des informations simples sur Wings, suivez ce [tutoriel](doc/fr/tutorial-luabeginner.md)
+  - #for, #do et #end sont des éléments de controle. Ils permettent à Wings de créer et de délimiter une boucle "for".
+  - "Ceci est une ligne!" est du texte. Il apparaitra sans modification dans le fichier de sortie.
+  - "i=1, 3" est le code Lua qui contrôle l'execution de la boucle for. Il sera écrit tel quel dans le code transpilé ; vous pouvez en fait écrire ce que vous voulez. Si vous écrivez du code invalide, ce n'est pas Wings qui affichera un message d'erreur, mais Lua.
 
-Pour un tutoriel un peu plus avancé : [ici](doc/fr/tutorial.md) puis [ici](doc/fr/tutorial-expert.md).
+## Principale limitation
+  Si on peut écrire avec Wings à peu près tout ce qu'on peut écrire en lua (au prix d'une syntaxe légèrement plus lourde), attention au point suivant : par défaut, tout texte écrit est collecté puis retourné.
+  Il n'y a donc pas de contrôle par l'utilisateur sur la valeur de retour du programme, ni (dans la plupart des cas) sur la valeur de retour d'une fonction.
 
-Pour se renseigner l'API [c'est ici](doc/fr/api.md)
-
-
-## Performances
-Wings est certainement plutôt lent :
-  - Etape de transpilation
-  - Appel de macro plutôt lourd
-  - Lua n'est pas très bon avec les chaînes de caractère
-
-Dans le futur, je ferais des tests pour avoir une idée claire des performances de Wings, et si besoin de l'optimiser.
-
-## Futures fonctionnalités
-### Prioritaires
-  - Vérication effectués par le transpiler :
-    - Est-ce qu'il y a bien un #end pour chaque #for / #if / ...
-    - Est-ce qu'il y a bien un #then après un #if, et non un #do...
-    - Est-ce que les noms de macros / variables sont des identifiants lua valides
-  - Tracer l'erreurs à travers plusieurs fichiers
-  - Avoir des tests unitaires pour les erreurs
-  - Appeler wings.lua en ligne de commande
-
-### Non prioritaires
-  - Permettre à l'utilisateur de modifier la syntaxe de Wings
-  - Donner un moyen simple d'utiliser des librairires lua externes
-  - Déclarer des macros locales
-  - Mots-clefs #do et #repeat
-  - Rendre l'usage des TokenList flexible
-  - Réfléchir aux performances et, si besoin, optimiser.
-
-### En réflexion
-  - Permettre à l'utilisateur d'étendre la syntaxe du transpileur (exemple : ```#alias oldname newname```) autrement que via des macros.
-  - Nouvelle structure ```#raw ... #end```
-  - Gestion des espaces. Les garder tous? Les supprimer? Un juste milieu?
-  - Gestion des caractères à échapper.
+  Je n'ai pas encore trouvé de manière élégante de régler ce problème, mais ce n'est pas une gêne majeure.
 
 ## License
 Wings est distribuée sous license GNU/GPL.
