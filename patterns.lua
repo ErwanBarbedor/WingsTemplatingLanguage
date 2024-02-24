@@ -21,7 +21,7 @@ Wings.transpiler.patterns = {
     indent                 = "    ",
 
     -- Macro, function and argument name format
-    identifier             = "[%a_][%a_0-9%.]*",
+    identifier = "[%a_][%a_0-9%.]*",
 
     -- Edit this value may break lua code.
     lua_identifier         = "[%a_][%a_0-9%.]*",
@@ -29,10 +29,10 @@ Wings.transpiler.patterns = {
     -- All theses token must be one string long,
     -- the transpiler assumes that is the case.
     escape                 = "#",
-    open_call              = "(",
-    close_call             = ")",
+    open_call              = "%(",
+    close_call             = "%)",
     arg_separator          = ",",
-    comment                = "-",
+    comment                = "%-",
     -- A prefix for make certain name invalid for
     -- an wings identifier.
     special_name_prefix    = "!"
@@ -48,12 +48,22 @@ function Wings.transpiler:compile_patterns ()
     -- if we are inside a call, check for call end or new argument
     self.patterns.capture_call     = '(.-)(['
         .. '%' .. self.patterns.escape
-        .. '%' .. self.patterns.open_call
-        .. '%' .. self.patterns.close_call
+         .. self.patterns.open_call
+        ..  self.patterns.close_call
         .. '%' .. self.patterns.arg_separator .. '])(.*)'
 
     -- if we are inside lua, check only for closing.
     self.patterns.capture_inline_lua = '(.-)(['
-        .. '%' .. self.patterns.open_call
-        .. '%' .. self.patterns.close_call .. '])(.*)'
+        .. self.patterns.open_call
+        .. self.patterns.close_call .. '])(.*)'
+end
+
+function Wings.transpiler.matchPattern (text, pattern, fromstart)
+    -- text      : string to search pattern
+    -- pattern   : string or function
+    -- fromstart : pattern must be at the start of the text?
+    if fromstart then
+        pattern = "^" .. pattern
+    end
+    return text:match(pattern)
 end

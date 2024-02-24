@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License along with Win
 function Wings.transpiler:handle_inside_call (command)
 
     -- check brace nested deep
-    if command == self.patterns.open_call then
+    if self.matchPattern(command, self.patterns.open_call) then
         self.top.deep = self.top.deep+1
-    elseif command == self.patterns.close_call then
+    elseif self.matchPattern(command, self.patterns.close_call) then
         self.top.deep = self.top.deep-1
     end
 
@@ -128,7 +128,7 @@ function Wings.transpiler:handle_wings_code (command)
         self:handle_end_keyword ()
 
    -- Enter lua-inline
-    elseif command == self.patterns.open_call then 
+    elseif self.matchPattern(command, self.patterns.open_call) then 
         local declaration = self.line:match('^%s*local%s+[%w%.]+%s*=%s*') or self.line:match('^%s*[%w%.]+%s*=%s*')
         
         if declaration then
@@ -143,7 +143,7 @@ function Wings.transpiler:handle_wings_code (command)
         self:increment_indent ()
 
     -- It is a comment, do nothing and break line
-    elseif command == self.patterns.comment then
+    elseif self.matchPattern (command, self.patterns.comment) then
         return true
 
     -- If the command it isn't a keyword, it is a macro call
@@ -154,8 +154,9 @@ end
 
 function Wings.transpiler:handle_new_macro (ismacro, isstruct)
     -- Declare a new macro. If is not a simple macro, it is a lmacro, so open a lua code chunck
-    local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
-    self.line = self.line:sub((#space+#name)+1, -1)
+    self.line = self.line:gsub('^%s*', '')
+    local name = self.matchPattern(self.line, self.patterns.identifier)
+    self.line = self.line:sub((#name)+1, -1)
     local args, spaces = self.line:match('^(%b())(%s*)')
     if args then
         self.line = self.line:sub(#args+#spaces+1, -1)
@@ -209,7 +210,7 @@ function Wings.transpiler:handle_macro_call (command)
     if command == "begin" then
         is_begin_struct = true
         self.line = self.line:gsub('^%s*', '')
-        command = self.line:match('^' .. self.patterns.identifier)
+        command = self.matchPattern(self.line, self.patterns.identifier, true)
         self.line = self.line:sub(#command+1, -1)
     end
 
@@ -221,7 +222,7 @@ function Wings.transpiler:handle_macro_call (command)
         self.line = self.line:gsub('^%(%s*%)', '')
         self:write_macrocall_end (command, #self.stack, true)
     
-    elseif self.line:match('^%' .. self.patterns.open_call) then
+    elseif self.matchPattern(self.line, self.patterns.open_call, true) then
         self.line = self.line:sub(2, -1)
         
         table.insert(self.stack, {name="call", deep=1, is_begin_struct=is_begin_struct, macro=command})

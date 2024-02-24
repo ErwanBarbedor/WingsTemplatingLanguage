@@ -143,14 +143,14 @@ function Wings.transpiler:split_line ()
     local before, capture, after
     if self.top.lua then
         if self.top.name == "lua-inline" then
-            before, capture, after = self.line:match(self.patterns.capture_inline_lua)
+            before, capture, after = self.matchPattern(self.line, self.patterns.capture_inline_lua)
         else
-            before, capture, after = self.line:match(self.patterns.capture)
+            before, capture, after = self.matchPattern(self.line, self.patterns.capture)
         end
     elseif self.top.name == "call" then
-        before, capture, after = self.line:match(self.patterns.capture_call)
+        before, capture, after = self.matchPattern(self.line, self.patterns.capture_call)
     else
-        before, capture, after = self.line:match(self.patterns.capture)
+        before, capture, after = self.matchPattern(self.line, self.patterns.capture)
     end
     return before, capture, after
 end
@@ -184,9 +184,9 @@ function Wings.transpiler:capture_syntax_feature (capture)
     -- The command could be keyword, a commentary or an opening.
     local command
     if capture == self.patterns.escape then
-        command = self.line:match ('^'  .. self.patterns.identifier)
-               or self.line:match ('^'  .. self.patterns.comment)
-               or self.line:match ('^%' .. self.patterns.open_call)
+        command = self.matchPattern(self.line, self.patterns.identifier, true)
+               or self.matchPattern(self.line, self.patterns.comment, true)
+               or self.matchPattern(self.line, self.patterns.open_call)
 
         self.line = self.line:sub(#command+1, -1)
     else
@@ -194,13 +194,15 @@ function Wings.transpiler:capture_syntax_feature (capture)
     end
 
     -- Manage call first
-    if  (command == self.patterns.open_call or command == self.patterns.close_call)
+    if  (self.matchPattern(command, self.patterns.open_call)
+        or
+        self.matchPattern(command, self.patterns.close_call))
         and
         (self.top.name == 'call' or self.top.name == "lua-inline") then
 
         self:handle_inside_call (command)
 
-    elseif command == self.patterns.arg_separator and self.top.name == 'call' then
+    elseif self.matchPattern(command, self.patterns.arg_separator) and self.top.name == 'call' then
         -- Inside a call, push a new argument
         self:write_macrocall_arg_end ()
         self:decrement_indent ()

@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2514)
+Wings v1.0.0-dev (build 2553)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2514)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2553)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -138,7 +138,7 @@ Wings.transpiler.patterns = {
     indent                 = "    ",
 
     -- Macro, function and argument name format
-    identifier             = "[%a_][%a_0-9%.]*",
+    identifier = "[%a_][%a_0-9%.]*",
 
     -- Edit this value may break lua code.
     lua_identifier         = "[%a_][%a_0-9%.]*",
@@ -146,10 +146,10 @@ Wings.transpiler.patterns = {
     -- All theses token must be one string long,
     -- the transpiler assumes that is the case.
     escape                 = "#",
-    open_call              = "(",
-    close_call             = ")",
+    open_call              = "%(",
+    close_call             = "%)",
     arg_separator          = ",",
-    comment                = "-",
+    comment                = "%-",
     -- A prefix for make certain name invalid for
     -- an wings identifier.
     special_name_prefix    = "!"
@@ -165,14 +165,24 @@ function Wings.transpiler:compile_patterns ()
     -- if we are inside a call, check for call end or new argument
     self.patterns.capture_call     = '(.-)(['
         .. '%' .. self.patterns.escape
-        .. '%' .. self.patterns.open_call
-        .. '%' .. self.patterns.close_call
+         .. self.patterns.open_call
+        ..  self.patterns.close_call
         .. '%' .. self.patterns.arg_separator .. '])(.*)'
 
     -- if we are inside lua, check only for closing.
     self.patterns.capture_inline_lua = '(.-)(['
-        .. '%' .. self.patterns.open_call
-        .. '%' .. self.patterns.close_call .. '])(.*)'
+        .. self.patterns.open_call
+        .. self.patterns.close_call .. '])(.*)'
+end
+
+function Wings.transpiler.matchPattern (text, pattern, fromstart)
+    -- text      : string to search pattern
+    -- pattern   : string or function
+    -- fromstart : pattern must be at the start of the text?
+    if fromstart then
+        pattern = "^" .. pattern
+    end
+    return text:match(pattern)
 end
 
 
@@ -307,14 +317,14 @@ function Wings.transpiler:split_line ()
     local before, capture, after
     if self.top.lua then
         if self.top.name == "lua-inline" then
-            before, capture, after = self.line:match(self.patterns.capture_inline_lua)
+            before, capture, after = self.matchPattern(self.line, self.patterns.capture_inline_lua)
         else
-            before, capture, after = self.line:match(self.patterns.capture)
+            before, capture, after = self.matchPattern(self.line, self.patterns.capture)
         end
     elseif self.top.name == "call" then
-        before, capture, after = self.line:match(self.patterns.capture_call)
+        before, capture, after = self.matchPattern(self.line, self.patterns.capture_call)
     else
-        before, capture, after = self.line:match(self.patterns.capture)
+        before, capture, after = self.matchPattern(self.line, self.patterns.capture)
     end
     return before, capture, after
 end
@@ -348,9 +358,9 @@ function Wings.transpiler:capture_syntax_feature (capture)
     -- The command could be keyword, a commentary or an opening.
     local command
     if capture == self.patterns.escape then
-        command = self.line:match ('^'  .. self.patterns.identifier)
-               or self.line:match ('^'  .. self.patterns.comment)
-               or self.line:match ('^%' .. self.patterns.open_call)
+        command = self.matchPattern(self.line, self.patterns.identifier, true)
+               or self.matchPattern(self.line, self.patterns.comment, true)
+               or self.matchPattern(self.line, self.patterns.open_call)
 
         self.line = self.line:sub(#command+1, -1)
     else
@@ -358,13 +368,15 @@ function Wings.transpiler:capture_syntax_feature (capture)
     end
 
     -- Manage call first
-    if  (command == self.patterns.open_call or command == self.patterns.close_call)
+    if  (self.matchPattern(command, self.patterns.open_call)
+        or
+        self.matchPattern(command, self.patterns.close_call))
         and
         (self.top.name == 'call' or self.top.name == "lua-inline") then
 
         self:handle_inside_call (command)
 
-    elseif command == self.patterns.arg_separator and self.top.name == 'call' then
+    elseif self.matchPattern(command, self.patterns.arg_separator) and self.top.name == 'call' then
         -- Inside a call, push a new argument
         self:write_macrocall_arg_end ()
         self:decrement_indent ()
@@ -479,9 +491,9 @@ end
 function Wings.transpiler:handle_inside_call (command)
 
     -- check brace nested deep
-    if command == self.patterns.open_call then
+    if self.matchPattern(command, self.patterns.open_call) then
         self.top.deep = self.top.deep+1
-    elseif command == self.patterns.close_call then
+    elseif self.matchPattern(command, self.patterns.close_call) then
         self.top.deep = self.top.deep-1
     end
 
@@ -592,7 +604,7 @@ function Wings.transpiler:handle_wings_code (command)
         self:handle_end_keyword ()
 
    -- Enter lua-inline
-    elseif command == self.patterns.open_call then 
+    elseif self.matchPattern(command, self.patterns.open_call) then 
         local declaration = self.line:match('^%s*local%s+[%w%.]+%s*=%s*') or self.line:match('^%s*[%w%.]+%s*=%s*')
         
         if declaration then
@@ -607,7 +619,7 @@ function Wings.transpiler:handle_wings_code (command)
         self:increment_indent ()
 
     -- It is a comment, do nothing and break line
-    elseif command == self.patterns.comment then
+    elseif self.matchPattern (command, self.patterns.comment) then
         return true
 
     -- If the command it isn't a keyword, it is a macro call
@@ -618,8 +630,9 @@ end
 
 function Wings.transpiler:handle_new_macro (ismacro, isstruct)
     -- Declare a new macro. If is not a simple macro, it is a lmacro, so open a lua code chunck
-    local space, name = self.line:match('^(%s*)('..self.patterns.identifier..')')
-    self.line = self.line:sub((#space+#name)+1, -1)
+    self.line = self.line:gsub('^%s*', '')
+    local name = self.matchPattern(self.line, self.patterns.identifier)
+    self.line = self.line:sub((#name)+1, -1)
     local args, spaces = self.line:match('^(%b())(%s*)')
     if args then
         self.line = self.line:sub(#args+#spaces+1, -1)
@@ -673,7 +686,7 @@ function Wings.transpiler:handle_macro_call (command)
     if command == "begin" then
         is_begin_struct = true
         self.line = self.line:gsub('^%s*', '')
-        command = self.line:match('^' .. self.patterns.identifier)
+        command = self.matchPattern(self.line, self.patterns.identifier, true)
         self.line = self.line:sub(#command+1, -1)
     end
 
@@ -685,7 +698,7 @@ function Wings.transpiler:handle_macro_call (command)
         self.line = self.line:gsub('^%(%s*%)', '')
         self:write_macrocall_end (command, #self.stack, true)
     
-    elseif self.line:match('^%' .. self.patterns.open_call) then
+    elseif self.matchPattern(self.line, self.patterns.open_call, true) then
         self.line = self.line:sub(2, -1)
         
         table.insert(self.stack, {name="call", deep=1, is_begin_struct=is_begin_struct, macro=command})
