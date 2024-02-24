@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2564)
+Wings v1.0.0-dev (build 2565)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2564)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2565)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -146,16 +146,16 @@ Wings.transpiler.patterns = {
     -- Edit this value may break lua code.
     lua_identifier         = "[%a_][%a_0-9%.]*",
 
-    -- All theses token must be one string long,
-    -- the transpiler assumes that is the case.
     escape                 = "#",
     open_call              = "%(",
     close_call             = "%)",
     arg_separator          = ",",
-    comment                = "%-",
+    comment                = "%-%-",
     -- A prefix for make certain name invalid for
     -- an wings identifier.
-    special_name_prefix    = "!"
+    special_name_prefix    = "!",
+
+
 }
 
 function Wings.transpiler:compile_patterns ()

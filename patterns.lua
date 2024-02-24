@@ -29,16 +29,16 @@ Wings.transpiler.patterns = {
     -- Edit this value may break lua code.
     lua_identifier         = "[%a_][%a_0-9%.]*",
 
-    -- All theses token must be one string long,
-    -- the transpiler assumes that is the case.
     escape                 = "#",
     open_call              = "%(",
     close_call             = "%)",
     arg_separator          = ",",
-    comment                = "%-",
+    comment                = "%-%-",
     -- A prefix for make certain name invalid for
     -- an wings identifier.
-    special_name_prefix    = "!"
+    special_name_prefix    = "!",
+
+
 }
 
 function Wings.transpiler:compile_patterns ()
