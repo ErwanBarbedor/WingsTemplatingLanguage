@@ -38,6 +38,27 @@ Wings.transpiler.patterns = {
     -- an wings identifier.
     special_name_prefix    = "!",
 
+    -- Controls elements
+    lua_for               = "for",
+    lua_while             = "while",
+    lua_do                = "do",
+    lua_if                = "if",
+    lua_then              = "then",
+    lua_else              = "else",
+    lua_elseif            = "elseif",
+    lua_end               = "end",
+    lua_affectation       = {
+        'local%s+[%w%.]+%s*=%s*',
+        '[%w%.]+%s*=%s*'
+    },
+
+    new_macro             = "macro",
+    new_lua_macro         = "lmacro",
+    new_struct            = "struct",
+    new_lua_struct        = "lstruct",
+    enter_struct          = "begin",
+
+    argument_list         = "(%b())(%s*)"
 
 }
 

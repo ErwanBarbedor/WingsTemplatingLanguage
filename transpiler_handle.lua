@@ -81,13 +81,15 @@ function Wings.transpiler:handle_lua_code (command)
 
        end
 
-    elseif command == "do" and (self.top.name == "for" or self.top.name == "while") then
+    elseif self.matchPattern(command, self.patterns.lua_do) 
+        and (self.top.name == "for" or self.top.name == "while") then
         table.remove(self.stack)
         table.insert(self.stack, {name="for"})
         self:write_lua ('do')
         self:increment_indent ()
 
-    elseif command == "then" and (self.top.name == "if" or self.top.name == "elseif") then
+    elseif self.matchPattern(command, self.patterns.lua_then)
+        and (self.top.name == "if" or self.top.name == "elseif") then
         table.remove(self.stack)
         table.insert(self.stack, {name=self.top.name})
         self:write_lua ('then')
@@ -109,27 +111,43 @@ function Wings.transpiler:handle_wings_code (command)
         self:write_lua ('\n' .. self.indent .. '-- Begin raw lua code\n', true)
 
     -- New macro
-    elseif command == "lmacro" or command == "macro" or command == "struct" or command == "lstruct" then
-        self:handle_new_macro (command:sub(1, 1) ~= "l", command:match('struct$'))
-        
+    elseif self.matchPattern(command, self.patterns.new_macro, true) then
+        self:handle_new_macro (true, false)
+    
+    -- New lua macro
+    elseif self.matchPattern(command, self.patterns.new_lua_macro, true) then
+        self:handle_new_macro (false, false)
+
+    -- New struct
+    elseif self.matchPattern(command, self.patterns.new_struct, true) then
+        self:handle_new_macro (true, true)
+
+    -- New lua struct
+    elseif self.matchPattern(command, self.patterns.new_lua_struct, true) then
+        self:handle_new_macro (false, true)
+
     -- Open a lua chunck for iterator / condition
-    elseif (command == "for" or command == "while") or command == "if" or command == "elseif" then
+    elseif self.matchPattern(command, self.patterns.lua_if)
+    or self.matchPattern(command, self.patterns.lua_elseif)
+    or self.matchPattern(command, self.patterns.lua_while)
+    or self.matchPattern(command, self.patterns.lua_for) then
         table.insert(self.stack, {lua=true, name=command})
         self:write_lua ('\n'.. self.indent..command)
 
     -- Just write "else" to the output
-    elseif command == "else" then
+    elseif self.matchPattern(command, self.patterns.lua_else) then
         self:decrement_indent()
         self:write_lua ('\n'.. self.indent..command)
         self:increment_indent()
 
     -- Close macro declaration, lua chunck or for/if/while structure
-    elseif command == "end" then
+    elseif self.matchPattern(command, self.patterns.lua_end) then
         self:handle_end_keyword ()
 
    -- Enter lua-inline
-    elseif self.matchPattern(command, self.patterns.open_call) then 
-        local declaration = self.line:match('^%s*local%s+[%w%.]+%s*=%s*') or self.line:match('^%s*[%w%.]+%s*=%s*')
+    elseif self.matchPattern(command, self.patterns.open_call) then
+        self.line = self.line:gsub('^%s*', '')
+        local declaration = self.matchPattern(self.line, self.patterns.lua_affectation)
         
         if declaration then
             self.line = self.line:sub(#declaration+1, -1)
@@ -157,7 +175,8 @@ function Wings.transpiler:handle_new_macro (ismacro, isstruct)
     self.line = self.line:gsub('^%s*', '')
     local name = self.matchPattern(self.line, self.patterns.identifier)
     self.line = self.line:sub((#name)+1, -1)
-    local args, spaces = self.line:match('^(%b())(%s*)')
+    local args, spaces = self.matchPattern(self.line, self.patterns.argument_list, true)
+
     if args then
         self.line = self.line:sub(#args+#spaces+1, -1)
     else
@@ -207,7 +226,7 @@ end
 
 function Wings.transpiler:handle_macro_call (command)
     local is_begin_struct
-    if command == "begin" then
+    if self.matchPattern(command, self.patterns.enter_struct, true) then
         is_begin_struct = true
         self.line = self.line:gsub('^%s*', '')
         command = self.matchPattern(self.line, self.patterns.identifier, true)
