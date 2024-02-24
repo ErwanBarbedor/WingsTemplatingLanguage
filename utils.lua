@@ -60,7 +60,7 @@ function Wings.utils.convert_noline (filestack, line)
         -- "@wings" isn't part of the filename
         filename = filename:gsub('@wings$', '')
         -- Dont needed
-        filename = filename:gsub('^%./', '')
+        filename = filename:gsub('^%.[/\\]', '')
         
 
         local noline_lua     = tonumber(noline)

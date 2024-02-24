@@ -35,7 +35,7 @@ Usage :
 
 -- Assume that, if the first arg is "wings.lua" or "wings", we are
 -- directly called from the command line
-local first_arg_name = arg[0]:match('[^/]*$')
+local first_arg_name = arg[0]:match('[^/\\]*$')
 if first_arg_name == 'wings.lua' or first_arg_name == 'wings' then
 
 	local cli_parameters = {

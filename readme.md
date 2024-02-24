@@ -11,6 +11,35 @@ I mainly use it in the Plume project (link to come), which allows writing docume
 Wings is currently under development and absolutely not ready for production use.
 A tutorial and extensive documentation are being written.
 
+## Installation
+
+If Lua is already installed, simply download the file ``dist/wings.lua`` and run it:
+``
+lua wings.lua -i input_file -o output_file
+``
+
+Wings is compatible with Lua 5.1, 5.2, 5.3, 5.4 and luajit.
+The repository also contains a small script to automatically add wings to the PATH, enabling you to do the following
+``
+wings -i input_file -o output_file
+``
+
+### Linux (lua already installed)
+```sh
+curl https://raw.githubusercontent.com/ErwanBarbedor/WingsTemplatingLanguage/master/dist/install > install.sh
+curl https://raw.githubusercontent.com/ErwanBarbedor/WingsTemplatingLanguage/master/dist/wings.lua > wings.lua
+sudo ./install.sh -i lua
+```
+With lua the name of your lua interpreter.
+
+### Windows (lua already installed)
+Download the files ``dist/wings.lua`` and ``dist/install.cmd``.
+Then, in a command console in administrator mode :
+``
+install.cmd -i lua
+``
+With lua the name of your lua interpreter.
+
 ## Design Note
 A "templating" language aims to allow the user to write their text as fluidly as possible.
 To structure their document and save time, it sometimes contains a few logical elements (macros, loops, or other programming elements...), but writing a complete program is often laborious: a templating language is not meant for that.

@@ -6,8 +6,37 @@ Wings est un langage de template "logicfull" intégrant lua dans sa syntaxe.
 
 Je l'utilise principalement dans le projet Plume (lien à venir), qui permet d'écrire des documents en utilisant la puissance du html+css.
 
-Wings est actuellement en cours de développement et absolument pas prêt à être utiliser en production.
+Wings est actuellement en cours de développement et absolument pas prêt à être utilisé en production.
 Un tutoriel et une documentation extensive sont en cours de rédaction.
+
+## Instalation
+
+Si Lua est déjà installé, il suffit de télécharger le fichier ``dist/wings.lua`` puis de l'executer :
+``
+lua wings.lua -i input_file -o output_file
+``
+
+Wings est compatible avec Lua 5.1, 5.2, 5.3, 5.4 et luajit.
+Le dépôt contient également un petit script pour automatiquement ajouter wings au PATH, et ainsi pouvoir faire
+``
+wings -i input_file -o output_file
+``
+
+### Linux (lua déjà installé)
+```sh
+curl https://raw.githubusercontent.com/ErwanBarbedor/WingsTemplatingLanguage/master/dist/install > install.sh
+curl https://raw.githubusercontent.com/ErwanBarbedor/WingsTemplatingLanguage/master/dist/wings.lua > wings.lua
+sudo ./install.sh -i lua
+```
+Avec lua le nom de votre intérpréteur lua.
+
+### Windows (lua déjà installé)
+Télécharger les fichiers ``dist/wings.lua`` et ``dist/install.cmd``
+Puis, dans une console de commande en mode administrateur :
+``
+install.cmd -i lua
+``
+Avec lua le nom de votre intérpréteur lua.
 
 ## Note de conception
 Un langage "de template" vise à permettre à l'utilisateur d'écrire son texte de la manière la plus fluide possible.

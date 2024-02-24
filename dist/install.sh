@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+# Use this script to install Wings into an UNIX system.
 
 show_help() {
   echo "Usage: $0 [options]"

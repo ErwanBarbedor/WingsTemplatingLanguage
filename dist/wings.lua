@@ -1,5 +1,5 @@
 --[[
-Wings v1.0.0-dev (build 2616)
+Wings v1.0.0-dev (build 2617)
 Copyright (C) 2023  Erwan Barbedor
 
 Check https://github.com/ErwanBarbedor/WingsTemplatingLanguage
@@ -32,7 +32,7 @@ Usage :
 
 local Wings = {}
 
-Wings._VERSION = "Wings v1.0.0-dev (build 2616)"
+Wings._VERSION = "Wings v1.0.0-dev (build 2617)"
 
 Wings.config = {}
 Wings.config.extensions = {'wings'}
@@ -87,7 +87,7 @@ function Wings.utils.convert_noline (filestack, line)
         -- "@wings" isn't part of the filename
         filename = filename:gsub('@wings$', '')
         -- Dont needed
-        filename = filename:gsub('^%./', '')
+        filename = filename:gsub('^%.[/\\]', '')
         
 
         local noline_lua     = tonumber(noline)
@@ -1223,7 +1223,7 @@ end
 
 -- Assume that, if the first arg is "wings.lua" or "wings", we are
 -- directly called from the command line
-local first_arg_name = arg[0]:match('[^/]*$')
+local first_arg_name = arg[0]:match('[^/\\]*$')
 if first_arg_name == 'wings.lua' or first_arg_name == 'wings' then
 
 	local cli_parameters = {
